@@ -60,6 +60,7 @@ pre {
 #problems li { padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; }
 #problems .err { background: var(--err-bg); color: var(--err); }
 #problems .warn { background: var(--warn-bg); color: var(--warn); }
+#problems .info { background: var(--code); color: var(--muted); }
 .hint.ai { background: var(--ai-bg); color: var(--text); padding: 8px 10px; border-radius: 6px; }
 .msg { min-height: 1.5em; margin: 8px 0 0; color: var(--muted); }
 /* Moje zdroje: pevné sloupce, dlouhý text se zkrátí „…“ (celý v title) */

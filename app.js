@@ -129,6 +129,8 @@ function button(text, cls, on, title) {
 
 // ---------- výstup ----------
 let lastEntry = null;
+// Nevyplněná povinná pole: nejdřív jen šedý přehled, červeně až po pokusu o kopírování/uložení.
+let strict = false;
 const others = i => mine.filter((m, j) => j !== i).map(m => m.key);
 function update() {
   const r = buildEntry(current.type, current.values, others(editIndex), { key: current.key, extra: current.extra });
@@ -137,12 +139,16 @@ function update() {
   $('out').textContent = r.text;
   const ul = $('problems');
   ul.innerHTML = '';
-  for (const p of r.problems) {
-    const li = document.createElement('li');
-    li.className = p.level === 'chyba' ? 'err' : 'warn';
-    li.textContent = p.msg;
-    ul.appendChild(li);
-  }
+  const li = (cls, text) => {
+    const el = document.createElement('li');
+    el.className = cls; el.textContent = text;
+    ul.appendChild(el);
+  };
+  const t = typeById(current.type);
+  const missing = r.problems.filter(p => p.field).map(p => fieldLabel(t, p.field));
+  if (missing.length)
+    li(strict ? 'err' : 'info', (strict ? 'Chybí povinné údaje: ' : 'Povinné údaje (*): ') + missing.join(', ') + '.');
+  for (const p of r.problems) if (!p.field) li(p.level === 'chyba' ? 'err' : 'warn', p.msg);
   $('cite').textContent = `\\parencite{${r.key}}      % odkaz v závorce\n` +
                           `\\parencite[s.~45]{${r.key}} % se stránkou\n` +
                           `\\footcite{${r.key}}         % v poznámce pod čarou`;
@@ -156,10 +162,15 @@ function flash(el, text) { el.textContent = text; clearTimeout(el._t); el._t = s
 
 $('copy').addEventListener('click', () => {
   const bad = lastEntry.problems.some(p => p.level === 'chyba');
+  if (bad) { strict = true; update(); }
   copy(lastEntry.text, $('copy-msg'), bad ? 'Zkopírováno, ale chybí povinné údaje (viz nahoře).' : 'Zkopírováno. Vložte na konec Bibliografie.bib.');
 });
 $('save').addEventListener('click', () => {
-  if (lastEntry.problems.some(p => p.level === 'chyba')) { flash($('copy-msg'), 'Nejdřív doplňte povinná pole.'); return; }
+  if (lastEntry.problems.some(p => p.level === 'chyba')) {
+    strict = true; update();
+    flash($('copy-msg'), 'Nejdřív doplňte povinné údaje (viz nahoře).');
+    return;
+  }
   const item = { key: lastEntry.key, text: lastEntry.text, type: current.type, values: structuredClone(current.values) };
   if (current.key) Object.assign(item, { own: true, extra: current.extra });
   if (editIndex === null) mine.push(item); else mine[editIndex] = item;
@@ -167,7 +178,7 @@ $('save').addEventListener('click', () => {
   $('mine-msg').textContent = '';
   saveMine(); clearForm();             // prázdný formulář → druhé kliknutí nepřidá duplikát
 });
-function clearForm() { current = { type: current.type, values: {} }; editIndex = null; renderMine(); renderFields(); update(); }
+function clearForm() { current = { type: current.type, values: {} }; editIndex = null; strict = false; renderMine(); renderFields(); update(); }
 $('clear').addEventListener('click', clearForm);
 
 // ---------- moje zdroje ----------
@@ -210,7 +221,7 @@ function renderMine() {
     akce.append(
       button('upravit', 'secondary small', () => {
         current = { type: m.type, values: structuredClone(m.values), key: m.own ? m.key : undefined, extra: m.extra };
-        editIndex = i; renderMine(); renderFields(); update();
+        editIndex = i; strict = true; renderMine(); renderFields(); update();
         $('h-zdroj').scrollIntoView({ behavior: 'smooth' });
       }),
       button('kopírovat', 'secondary small', () => copy(m.text, $('copy-msg'), `Zkopírováno: ${m.key}`)),

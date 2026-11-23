@@ -194,7 +194,7 @@ export function buildEntry(typeId, values, taken = [], { key: ownKey, extra = {}
     if (F[f] && F[f].kind === 'names') return (v[f] || []).some(n => (n.last || '').trim());
     return String(v[f] ?? '').trim() !== '';
   };
-  for (const f of t.req) if (!present(f)) problems.push({ level: 'chyba', msg: `Chybí povinné pole „${fieldLabel(t, f)}“.` });
+  for (const f of t.req) if (!present(f)) problems.push({ level: 'chyba', field: f, msg: `Chybí povinné pole „${fieldLabel(t, f)}“.` });
 
   // Kontroly obsahu
   for (const f of ['author', 'editor', 'holder']) for (const n of (v[f] || [])) {
