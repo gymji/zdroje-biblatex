@@ -167,7 +167,10 @@ export function escapeTeX(s) {
 // Klíč pro \cite: příjmení prvního autora (nebo první slovo názvu) + rok, jen a–z a číslice.
 export function makeKey(values, taken = []) {
   const n = (values.author || []).find(a => (a.last || '').trim());
-  let base = n ? (n.inst ? n.last.trim().split(/\s+/)[0] : n.last) : (values.title || 'zdroj').split(/\s+/)[0];
+  // bez autora: organizace (web), pak první slovo názvu
+  const org = typeof values.organization === 'string' ? values.organization.trim() : '';
+  let base = n ? (n.inst ? n.last.trim().split(/\s+/)[0] : n.last)
+               : (org || values.title || 'zdroj').trim().split(/\s+/)[0];
   base = base.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (!base) base = 'zdroj';
   const year = values.year || (values.date || '').slice(0, 4);
