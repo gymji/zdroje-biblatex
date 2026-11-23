@@ -108,3 +108,6 @@ footer a { color: var(--accent); }
 .examples .ex-what { margin: 0; }
 .examples .hint { margin: 4px 0 6px; }
 .examples pre { margin: 8px 0 0; }
+
+/* atribut hidden musí vyhrát i nad display: grid/flex (ukázky, tabulka, záznam) */
+[hidden] { display: none !important; }
