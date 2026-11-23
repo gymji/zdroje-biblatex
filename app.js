@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123b';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123c';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -19,7 +19,7 @@ let mine = load(STORE), head = load(HEAD);
 // key = vlastní klíč a extra = další pole jen u zdroje z nahraného .bib
 let current = { type: 'book', values: {} };
 let editIndex = null;                   // který z mých zdrojů se právě upravuje
-const plural = (n, a, b, c) => `${n} ${n === 1 ? a : n < 5 ? b : c}`;
+const plural = (n, a, b, c) => `${n} ${n === 1 ? a : n >= 2 && n <= 4 ? b : c}`;
 
 // ---------- výběr druhu zdroje ----------
 const sel = $('type');
