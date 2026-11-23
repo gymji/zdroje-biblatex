@@ -29,6 +29,10 @@ Statická stránka bez serveru a bez sběru dat; „Moje zdroje“ zůstávají 
 | `test/vzorky.mjs` | vzorový záznam od každého druhu → `test/generated.bib`; test nahrání `.bib` |
 | `test/preklad.sh` | přeloží vzorky v obou stylech (XeLaTeX + bibtex, jako šablona MP) |
 
+**Po každé změně** zvyšte číslo verze `?v=…` u `style.css` a `app.js` v `index.html`
+a u importu `./bib.js?v=…` v `app.js` (všude stejné), jinak prohlížeče studentů
+mohou až 10 minut míchat staré a nové soubory.
+
 ## Test
 
 ```sh

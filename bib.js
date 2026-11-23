@@ -411,6 +411,13 @@ function parseFields(s, strings, where, errors) {
   return out;
 }
 
+// Obsah nahraného souboru → text. Starší editory na Windows ukládají ve Windows-1250
+// (to není platné UTF-8); BOM na začátku UTF-8 TextDecoder sám vynechá.
+export function decodeBib(buf) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+  catch { return new TextDecoder('windows-1250').decode(buf); }
+}
+
 const MONTHS = Object.fromEntries('jan feb mar apr may jun jul aug sep oct nov dec'.split(' ').map((m, i) => [m, String(i + 1)]));
 
 // Vrací {entries: [{entry, key, fields, source}], head: [@string/@preamble/@comment], skipped, errors: [text]}.

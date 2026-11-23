@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, toForm, plainTeX } from './bib.js';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123b';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -255,7 +255,7 @@ $('upload-file').addEventListener('change', async e => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  const p = parseBib(await file.text());
+  const p = parseBib(decodeBib(await file.arrayBuffer()));
   let added = 0, same = 0;
   for (const en of p.entries) {
     if (mine.some(m => m.text === en.source)) { same++; continue; }

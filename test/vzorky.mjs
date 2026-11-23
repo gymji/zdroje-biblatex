@@ -1,5 +1,5 @@
 // Vzorová data pro každý druh zdroje → generated.bib (test: node test/vzorky.mjs)
-import { TYPES, buildEntry, parseBib, toForm, plainTeX, fromCitoid } from '../bib.js';
+import { TYPES, buildEntry, parseBib, toForm, plainTeX, fromCitoid, decodeBib } from '../bib.js';
 import { writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -134,3 +134,11 @@ assert.deepEqual(kniha, { type: 'book', values: { editor: [{ last: 'Cormen', fir
   title: 'Introduction to algorithms', publisher: 'MIT Press', location: 'Cambridge, Mass', edition: '3',
   isbn: '978-0-262-03384-8', year: '2009' } });
 console.log('OK: dohledání adresy (Citoid)');
+
+// Kódování nahraného souboru: UTF-8, UTF-8 s BOM (Poznámkový blok), Windows-1250
+const zprava = '@book{k, author={Novák, Jan}, title={Černý}}';
+const cp1250 = Uint8Array.from(zprava, c => ({ 'á': 0xE1, 'Č': 0xC8, 'ý': 0xFD })[c] ?? c.charCodeAt(0));
+assert.equal(decodeBib(new TextEncoder().encode(zprava)), zprava);
+assert.equal(decodeBib(new Uint8Array([0xEF, 0xBB, 0xBF, ...new TextEncoder().encode(zprava)])), zprava);
+assert.equal(decodeBib(cp1250), zprava);
+console.log('OK: kódování UTF-8 / BOM / Windows-1250');
