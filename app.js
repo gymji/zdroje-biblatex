@@ -3,7 +3,8 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123f';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123h';
+import { PRIKLADY } from './priklady.js?v=20261123h';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -359,7 +360,54 @@ async function lookupIsbn(isbn, raw) {
   throw new Error('ISBN se nepodařilo dohledat (české knihy často chybí).');
 }
 
+// ---------- ukázkové zdroje (jen k prohlédnutí, neukládají se) ----------
+function renderExamples() {
+  const ol = $('examples'), keys = [];
+  for (const u of PRIKLADY) {
+    const r = buildEntry(u.type, u.values, keys, { extra: u.extra });
+    keys.push(r.key);
+    const v = u.values, a = (v.author || [])[0];
+    const li = document.createElement('li');
+    const h = document.createElement('h3');
+    h.textContent = u.varianta;
+    const what = document.createElement('p');
+    what.className = 'ex-what';
+    const i = document.createElement('i');
+    i.textContent = v.title;
+    what.append(a ? a.last + (a.first ? ', ' + a.first : '') + (v.author.length > 1 ? ' a kol.' : '') + ': ' : '',
+                i, ` (${v.year}) · ${typeById(u.type).label.split(/ \(|,/)[0]}`);
+    const tip = document.createElement('p');
+    tip.className = 'hint';
+    tip.textContent = u.tip;
+    const pre = document.createElement('pre');
+    pre.textContent = r.text;
+    pre.hidden = true;
+    const row = document.createElement('div');
+    row.className = 'row';
+    const show = button('ukázat záznam', 'secondary small', () => {
+      pre.hidden = !pre.hidden;
+      show.textContent = pre.hidden ? 'ukázat záznam' : 'skrýt záznam';
+    });
+    row.append(show, button('načíst do formuláře', 'secondary small', () => {
+      current = { type: u.type, values: structuredClone(u.values), extra: u.extra };
+      editIndex = null; strict = false; renderMine(); renderFields(); update();
+      $('h-zdroj').scrollIntoView({ behavior: 'smooth' });
+    }));
+    li.append(h, what, tip, row, pre);
+    ol.appendChild(li);
+  }
+}
+function showExamples(open) {
+  $('examples').hidden = !open;
+  $('show-examples').textContent = open ? 'Skrýt ukázky' : 'Zobrazit ukázky';
+  $('show-examples').setAttribute('aria-expanded', String(open));
+}
+$('show-examples').addEventListener('click', () => showExamples($('examples').hidden));
+
 // ---------- start ----------
 renderFields();
 update();
 renderMine();
+renderExamples();
+// odkaz …/#ukazky rovnou otevře ukázky (např. ze zadání)
+if (location.hash === '#ukazky') { showExamples(true); $('ukazky').scrollIntoView(); }

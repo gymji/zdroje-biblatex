@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zdroj → BibLaTeX</title>
 <meta name="description" content="Formulář pro tvorbu záznamů seznamu literatury (BibLaTeX, ČSN ISO 690) pro maturitní a seminární práce.">
-<link rel="stylesheet" href="style.css?v=20261123f">
+<link rel="stylesheet" href="style.css?v=20261123h">
 </head>
 <body>
 <header>
@@ -76,6 +76,17 @@
     <p id="mine-msg" class="msg" role="status"></p>
   </section>
 
+  <section class="card" id="ukazky" aria-labelledby="h-ukazky">
+    <h2 id="h-ukazky">Ukázky: jak zapsat různé knihy</h2>
+    <p class="hint">Skutečné knihy ověřené v Souborném katalogu ČR: více autorů, instituce jako autor, překlad,
+       e-kniha, audiokniha, kapitola, antický autor, Bible … Ukázky se nikam neukládají; „načíst do formuláře“
+       ukáže, jak se pole vyplní (váš rozepsaný zdroj se přepíše).</p>
+    <div class="row">
+      <button id="show-examples" type="button" class="secondary" aria-expanded="false" aria-controls="examples">Zobrazit ukázky</button>
+    </div>
+    <ol id="examples" class="examples" hidden></ol>
+  </section>
+
   <details class="card">
     <summary>Jak se záznam použije v LaTeXu</summary>
     <ol>
@@ -100,6 +111,6 @@
      <a href="https://www.jirovcovka.net">www.jirovcovka.net</a> ·
      <a href="https://github.com/gymji/zdroje-biblatex/blob/main/LICENSE">licence MIT</a></p>
 </footer>
-<script type="module" src="app.js?v=20261123f"></script>
+<script type="module" src="app.js?v=20261123h"></script>
 </body>
 </html>

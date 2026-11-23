@@ -101,3 +101,10 @@ pre {
 .cite p { margin: 12px 0 0; }
 footer { color: var(--muted); font-size: 0.85rem; padding-bottom: 32px; }
 footer a { color: var(--accent); }
+/* ukázkové zdroje */
+.examples { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+.examples li { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.examples h3 { margin: 0 0 2px; font-size: 1rem; }
+.examples .ex-what { margin: 0; }
+.examples .hint { margin: 4px 0 6px; }
+.examples pre { margin: 8px 0 0; }

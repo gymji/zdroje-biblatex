@@ -6,11 +6,11 @@
 \setmainlanguage{czech}
 \setotherlanguage{english}
 \usepackage[style=\STYL, backend=bibtex, sorting=nty]{biblatex}
-\addbibresource{generated.bib}
+\providecommand\BIB{generated}
+\addbibresource{\BIB.bib}
 \begin{document}
 \section*{Test: \STYL}
-Kniha \parencite{halliday2013}, článek \parencite{staacks2018b}, AI \parencite{openai2025},
-s~číslem strany \parencite[s.~45]{halliday2013}, pod čarou\footcite{feynman2000}.
+Kniha \parencite{halliday2013}, s~číslem strany \parencite[s.~45]{halliday2013}.
 \nocite{*}
 \printbibliography
 \end{document}

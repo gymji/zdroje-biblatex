@@ -14,6 +14,8 @@ seminární práci v LaTeXu (šablona maturitní práce, Overleaf).
 - kontrola povinných údajů, klíč pro `\cite`, „Moje zdroje“ a stažení celého `.bib`
 - nahrání vlastního `.bib`: přehled se stavem každého záznamu, úprava ve formuláři
   (klíč i další pole jako `abstract` zůstanou), neupravené záznamy se stáhnou beze změny
+- ukázky: 12 skutečných knih v různých podobách (více autorů, instituce, překlad, e-kniha,
+  audiokniha, kapitola, Platón, Newton, Bible, Epos o Gilgamešovi) — prohlédnout nebo načíst do formuláře
 - podobu citace podle ČSN ISO 690 zařídí LaTeX (`biblatex-iso690`,
   `style=iso-numeric` nebo `style=iso-authoryear`)
 
@@ -57,12 +59,13 @@ ručně ji neupravujte.
 | `index.html`, `style.css` | stránka |
 | `app.js` | ovládání formuláře, dohledání, moje zdroje |
 | `bib.js` | druhy zdrojů a sestavení záznamu (bez závislosti na stránce) |
+| `priklady.js` | ukázkové zdroje (ověřené v Souborném katalogu ČR), na stránce „Ukázky“ |
 | `test/vzorky.mjs` | vzorový záznam od každého druhu → `test/generated.bib`; test nahrání `.bib` |
 | `test/preklad.sh` | přeloží vzorky v obou stylech (XeLaTeX + bibtex, jako šablona MP) |
 | `test/tabulka.mjs` | tabulka povinných/volitelných polí v tomto README (z `bib.js`) |
 
 **Po každé změně** zvyšte číslo verze `?v=…` u `style.css` a `app.js` v `index.html`
-a u importu `./bib.js?v=…` v `app.js` (všude stejné), jinak prohlížeče studentů
+a u importů `./bib.js?v=…` a `./priklady.js?v=…` v `app.js` (všude stejné), jinak prohlížeče studentů
 mohou až 10 minut míchat staré a nové soubory.
 
 ## Test

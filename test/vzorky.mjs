@@ -1,6 +1,7 @@
 // Vzorová data pro každý druh zdroje → generated.bib (test: node test/vzorky.mjs)
 import { TYPES, buildEntry, parseBib, toForm, plainTeX, fromCitoid, decodeBib } from '../bib.js';
 import { writeFileSync } from 'node:fs';
+import { PRIKLADY } from '../priklady.js';
 import assert from 'node:assert/strict';
 
 const A = (last, first = '', inst = false) => ({ last, first, inst });
@@ -142,3 +143,14 @@ assert.equal(decodeBib(new TextEncoder().encode(zprava)), zprava);
 assert.equal(decodeBib(new Uint8Array([0xEF, 0xBB, 0xBF, ...new TextEncoder().encode(zprava)])), zprava);
 assert.equal(decodeBib(cp1250), zprava);
 console.log('OK: kódování UTF-8 / BOM / Windows-1250');
+
+// Ukázkové zdroje (priklady.js): bez chyb a upozornění, klíče různé → priklady.bib
+const klice = [], ukazky = [];
+for (const u of PRIKLADY) {
+  const r = buildEntry(u.type, u.values, klice, { extra: u.extra });
+  assert.deepEqual(r.problems, [], u.varianta);
+  klice.push(r.key);
+  ukazky.push(`% ${u.varianta}\n${r.text}`);
+}
+writeFileSync(new URL('priklady.bib', import.meta.url), ukazky.join('\n\n') + '\n');
+console.log(`OK: ${PRIKLADY.length} ukázek → test/priklady.bib (${klice.join(', ')})`);
