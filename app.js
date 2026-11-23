@@ -3,8 +3,8 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123h2';
-import { PRIKLADY } from './priklady.js?v=20261123h2';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123i';
+import { PRIKLADY } from './priklady.js?v=20261123i';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -368,6 +368,7 @@ function renderExamples() {
     keys.push(r.key);
     const v = u.values, a = (v.author || [])[0];
     const li = document.createElement('li');
+    li.className = 't-' + u.type;      // barva „hřbetu“ karty podle druhu
     const h = document.createElement('h3');
     h.textContent = u.varianta;
     const what = document.createElement('p');

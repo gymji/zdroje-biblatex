@@ -5,18 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zdroj → BibLaTeX</title>
 <meta name="description" content="Formulář pro tvorbu záznamů seznamu literatury (BibLaTeX, ČSN ISO 690) pro maturitní a seminární práce.">
-<link rel="stylesheet" href="style.css?v=20261123h2">
+<link rel="stylesheet" href="style.css?v=20261123i">
 </head>
 <body>
-<header>
-  <h1>Zdroj → BibLaTeX</h1>
-  <p>Vyplňte údaje o zdroji a zkopírujte hotový záznam do souboru <code>Bibliografie.bib</code>
-     ve svém projektu na Overleafu. Podobu citace (ČSN ISO 690) zařídí LaTeX sám.</p>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ico-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-book" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3 4.8v13.4c4-.3 7 .2 9 1.8 2-1.6 5-2.1 9-1.8V4.8c-4-.3-7 .2-9 1.7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 6.5V20" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="ico-code" viewBox="0 0 24 24"><path d="M8 4C5.5 4 6 7 6 9s-1 3-3 3c2 0 3 1 3 3s-.5 5 2 5M16 4c2.5 0 2 3 2 5s1 3 3 3c-2 0-3 1-3 3s.5 5-2 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-shelf" viewBox="0 0 24 24"><rect x="3.5" y="5" width="3.5" height="13" rx=".6" fill="currentColor"/><rect x="8.5" y="3" width="3.5" height="15" rx=".6" fill="currentColor" opacity=".7"/><rect x="13.6" y="6" width="3.4" height="12.4" rx=".6" fill="currentColor" transform="rotate(-14 15.3 18)"/><path d="M2 20.5h20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m12 6.6 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4Z" fill="currentColor"/></symbol>
+  <symbol id="ico-latex" viewBox="0 0 24 24"><path d="M5 4h9l5 5v11H5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 4v5h5M8.5 13h7M8.5 16.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">Seznam literatury · maturitní a seminární práce · ČSN ISO 690</p>
+    <h1>Zdroj <span class="arrow">→</span> BibLaTeX</h1>
+    <p>Vyplňte údaje o zdroji a zkopírujte hotový záznam do souboru <code>Bibliografie.bib</code>
+       ve svém projektu na Overleafu. Podobu citace (ČSN ISO 690) zařídí LaTeX sám.</p>
+  </div>
+  <svg class="hero-art" viewBox="0 0 340 190" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <!-- katalogový lístek -->
+    <g transform="rotate(-6 255 60)">
+      <rect x="200" y="14" width="120" height="78" rx="5" fill="#fffaf0"/>
+      <circle cx="260" cy="80" r="4.5" fill="#d9cbb0"/>
+      <path d="M212 32h96" stroke="#c0392b" stroke-width="1.6"/>
+      <path d="M212 44h70M212 54h88M212 64h56" stroke="#9aa6a1" stroke-width="3" stroke-linecap="round"/>
+      <text x="212" y="27" font-family="ui-monospace, Consolas, monospace" font-size="10" font-weight="700" fill="#1d5e52">@book{čapek2010,</text>
+    </g>
+    <!-- police s knihami -->
+    <g>
+      <rect x="18" y="62" width="22" height="104" rx="2" fill="#e9b949"/><path d="M18 76h22M18 150h22" stroke="#00000033" stroke-width="3"/>
+      <rect x="42" y="50" width="28" height="116" rx="2" fill="#c0503f"/><path d="M42 66h28M42 146h28" stroke="#00000033" stroke-width="3"/><rect x="50" y="86" width="12" height="36" rx="2" fill="#ffffff55"/>
+      <rect x="72" y="72" width="18" height="94" rx="2" fill="#3f8f7e"/><path d="M72 84h18M72 154h18" stroke="#00000033" stroke-width="2.5"/>
+      <rect x="92" y="56" width="26" height="110" rx="2" fill="#2f5d8c"/><path d="M92 70h26M92 150h26" stroke="#ffffff44" stroke-width="2.5"/><circle cx="105" cy="110" r="6" fill="#e9b949"/>
+      <rect x="120" y="80" width="16" height="86" rx="2" fill="#8a5a9e"/>
+      <g transform="rotate(16 140 166)"><rect x="138" y="66" width="24" height="100" rx="2" fill="#e07b39"/><path d="M138 80h24M138 152h24" stroke="#00000033" stroke-width="3"/></g>
+      <rect x="182" y="100" width="40" height="14" rx="2" fill="#3f8f7e"/>
+      <rect x="178" y="114" width="48" height="16" rx="2" fill="#c0503f"/>
+      <rect x="184" y="130" width="42" height="16" rx="2" fill="#e9b949"/>
+      <rect x="180" y="146" width="46" height="20" rx="2" fill="#2f5d8c"/>
+      <rect x="234" y="88" width="20" height="78" rx="2" fill="#d8c7a3"/><path d="M234 100h20M234 156h20" stroke="#00000026" stroke-width="2.5"/>
+      <rect x="256" y="70" width="26" height="96" rx="2" fill="#1d5e52"/><path d="M256 84h26M256 152h26" stroke="#e9b94988" stroke-width="2.5"/>
+      <rect x="284" y="96" width="16" height="70" rx="2" fill="#c0503f"/>
+      <rect x="302" y="78" width="22" height="88" rx="2" fill="#8a5a9e"/><path d="M302 92h22" stroke="#ffffff44" stroke-width="2.5"/>
+      <rect x="8" y="166" width="326" height="10" rx="3" fill="#7a5233"/>
+      <rect x="8" y="176" width="326" height="6" rx="2" fill="#5c3c24"/>
+    </g>
+  </svg>
 </header>
 
 <main>
-  <section class="card" aria-labelledby="h-hledat">
-    <h2 id="h-hledat">1. Dohledat podle DOI, ISBN nebo adresy <span class="muted">(nepovinné)</span></h2>
+  <section class="card card-step" aria-labelledby="h-hledat">
+    <h2 id="h-hledat"><span class="step">1<span class="sr">.</span></span> <span class="h-text">Dohledat podle DOI, ISBN nebo adresy <span class="muted">(nepovinné)</span></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-search"/></svg></h2>
     <form id="lookup" class="row">
       <label class="grow">DOI článku, ISBN knihy nebo adresa webové stránky
         <input id="lookup-id" placeholder="např. 10.1088/1361-6552/aac05e, 978-0-262-03384-8 nebo https://cs.wikipedia.org/wiki/Kyvadlo" autocomplete="off">
@@ -26,8 +67,8 @@
     <p id="lookup-msg" class="msg" role="status"></p>
   </section>
 
-  <section class="card" aria-labelledby="h-zdroj">
-    <h2 id="h-zdroj">2. Druh zdroje a údaje</h2>
+  <section class="card card-step" aria-labelledby="h-zdroj">
+    <h2 id="h-zdroj"><span class="step">2<span class="sr">.</span></span> <span class="h-text">Druh zdroje a údaje</span><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-book"/></svg></h2>
     <label>Druh zdroje
       <select id="type"></select>
     </label>
@@ -35,10 +76,13 @@
     <form id="fields" autocomplete="off"></form>
   </section>
 
-  <section class="card" aria-labelledby="h-vysledek">
-    <h2 id="h-vysledek">3. Záznam do <code>Bibliografie.bib</code></h2>
+  <section class="card card-step card-out" aria-labelledby="h-vysledek">
+    <h2 id="h-vysledek"><span class="step">3<span class="sr">.</span></span> <span class="h-text">Záznam do <code>Bibliografie.bib</code></span><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-code"/></svg></h2>
     <ul id="problems"></ul>
-    <pre id="out" tabindex="0"></pre>
+    <div class="codefile">
+      <div class="codefile-bar" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span>Bibliografie.bib</div>
+      <pre id="out" tabindex="0"></pre>
+    </div>
     <div class="row">
       <button id="copy" type="button">Kopírovat záznam</button>
       <button id="save" type="button" class="secondary">Přidat do mých zdrojů</button>
@@ -52,7 +96,7 @@
   </section>
 
   <section class="card" aria-labelledby="h-moje">
-    <h2 id="h-moje">Moje zdroje <span id="count" class="muted"></span></h2>
+    <h2 id="h-moje"><span class="step step-ico"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-shelf"/></svg></span> <span class="h-text">Moje zdroje <span id="count" class="muted"></span></span></h2>
     <p class="hint">Ukládají se jen v tomto prohlížeči. Hotový soubor stáhněte a nahrajte na Overleaf
        (nahradí <code>Bibliografie.bib</code>), nebo záznamy kopírujte po jednom.
        Svůj dosavadní <code>.bib</code> můžete nahrát: záznamy se přidají sem, zkontrolují a půjdou upravit
@@ -77,7 +121,7 @@
   </section>
 
   <section class="card" id="ukazky" aria-labelledby="h-ukazky">
-    <h2 id="h-ukazky">Ukázky: jak zapsat různé knihy</h2>
+    <h2 id="h-ukazky"><span class="step step-ico"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-bookmark"/></svg></span> <span class="h-text">Ukázky: jak zapsat různé knihy</span></h2>
     <p class="hint">Skutečné knihy ověřené v Souborném katalogu ČR: více autorů, instituce jako autor, překlad,
        e-kniha, audiokniha, kapitola, antický autor, Bible … Ukázky se nikam neukládají; „načíst do formuláře“
        ukáže, jak se pole vyplní (váš rozepsaný zdroj se přepíše).</p>
@@ -87,8 +131,8 @@
     <ol id="examples" class="examples" hidden></ol>
   </section>
 
-  <details class="card">
-    <summary>Jak se záznam použije v LaTeXu</summary>
+  <details class="card howto">
+    <summary><span class="step step-ico"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-latex"/></svg></span> <span class="h-text">Jak se záznam použije v LaTeXu</span></summary>
     <ol>
       <li>Na Overleafu otevřete soubor <code>Bibliografie.bib</code> a záznam vložte na konec.</li>
       <li>V textu napište <code>\parencite{klíč}</code> (odkaz v závorce), <code>\cite{klíč}</code>
@@ -104,6 +148,14 @@
 </main>
 
 <footer>
+  <svg class="footer-shelf" viewBox="0 0 170 44" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <rect x="14" y="10" width="12" height="28" rx="1.5" fill="#3f8f7e"/><rect x="28" y="4" width="15" height="34" rx="1.5" fill="#c0503f"/>
+    <rect x="45" y="14" width="10" height="24" rx="1.5" fill="#e9b949"/><rect x="57" y="8" width="14" height="30" rx="1.5" fill="#2f5d8c"/>
+    <g transform="rotate(14 73 38)"><rect x="73" y="10" width="12" height="28" rx="1.5" fill="#8a5a9e"/></g>
+    <rect x="98" y="30" width="34" height="8" rx="1.5" fill="#e07b39"/><rect x="101" y="23" width="28" height="7" rx="1.5" fill="#3f8f7e"/>
+    <rect x="136" y="12" width="11" height="26" rx="1.5" fill="#d8c7a3"/><rect x="149" y="6" width="9" height="32" rx="1.5" fill="#1d6b5c"/>
+    <rect x="4" y="38" width="162" height="5" rx="2" fill="#8a6142"/>
+  </svg>
   <p><a href="https://github.com/gymji/zdroje-biblatex">zdrojový kód</a>
      · data DOI: Crossref, ISBN: Souborný katalog ČR (knihovny.cz) / Google Books / Open Library, webové stránky: Wikimedia Citoid
      (zadaná adresa se pošle Wikimedii)</p>
@@ -111,6 +163,6 @@
      <a href="https://www.jirovcovka.net">www.jirovcovka.net</a> ·
      <a href="https://github.com/gymji/zdroje-biblatex/blob/main/LICENSE">licence MIT</a></p>
 </footer>
-<script type="module" src="app.js?v=20261123h2"></script>
+<script type="module" src="app.js?v=20261123i"></script>
 </body>
 </html>
