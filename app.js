@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123c';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123d';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -329,7 +329,20 @@ $('lookup').addEventListener('submit', async e => {
   }
 });
 
+// Souborný katalog českých knihoven (CORS *); české/slovenské ISBN (80-…) zkoušíme nejdřív
+async function cpk(isbn, raw) {
+  try {
+    const f = ['title', 'primaryAuthors', 'placesOfPublication', 'publishers', 'publicationDates', 'edition']
+      .map(x => '&field[]=' + x).join('');
+    const res = await get(`https://www.knihovny.cz/api/v1/search?lookfor=isbn:${isbn}&limit=1${f}`, 8000);
+    const r = ((await res.json()).records || [])[0];
+    return r ? fromCPK(r, raw) : null;
+  } catch { return null; }
+}
+
 async function lookupIsbn(isbn, raw) {
+  const czech = /^(97[89])?80/.test(isbn);
+  if (czech) { const r = await cpk(isbn, raw); if (r) return r; }
   try {
     const res = await get('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn, 5000);
     const data = await res.json();
@@ -340,6 +353,7 @@ async function lookupIsbn(isbn, raw) {
     const b = (await res.json())['ISBN:' + isbn];
     if (b) return fromOpenLibrary(b, raw);
   } catch { /* zkusíme Citoid */ }
+  if (!czech) { const r = await cpk(isbn, raw); if (r) return r; }
   const z = await citoid(isbn).catch(() => null);
   if (z) return fromCitoid(z, '');
   throw new Error('ISBN se nepodařilo dohledat (české knihy často chybí).');

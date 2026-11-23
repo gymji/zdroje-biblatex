@@ -285,6 +285,24 @@ export function fromOpenLibrary(b, isbn) {
     year: ((b.publish_date || '').match(/\d{4}/) || [''])[0], isbn } };
 }
 
+// --- Souborný katalog CPK (knihovny.cz, VuFind API) — české a slovenské knihy ---
+// r = jeden záznam (pole title, primaryAuthors, placesOfPublication, publishers, publicationDates, edition)
+const ORD = ['první', 'druhé', 'třetí', 'čtvrté', 'páté', 'šesté', 'sedmé', 'osmé', 'deváté', 'desáté'];
+export function fromCPK(r, isbn) {
+  const tidy = s => String(s || '').replace(/[\s:;,/.]+$/, '').replace(/^\[|\]$/g, '').trim();
+  const [title, ...sub] = tidy(r.title).split(' : ');
+  const ed = String(r.edition || '').toLowerCase();
+  let edition = (ed.match(/\d+/) || [''])[0];
+  if (!edition) { const i = ORD.findIndex(o => ed.startsWith(o)); if (i >= 0) edition = String(i + 1); }
+  if (edition === '1') edition = '';
+  return { type: 'book', values: {
+    author: (r.primaryAuthors || []).map(a => splitName(a.replace(/,\s*[\d-]+\s*$/, ''))),
+    title: title || '', subtitle: sub.join(' : '), edition,
+    location: tidy((r.placesOfPublication || [])[0]),
+    publisher: tidy((r.publishers || [])[0]),
+    year: (String((r.publicationDates || [])[0] || '').match(/\d{4}/) || [''])[0], isbn } };
+}
+
 // --- Dohledání podle adresy (Wikimedia Citoid, formát „mediawiki“ = položka Zotera) ---
 // z = jedna položka odpovědi, url = adresa, kterou zadal student (u Wikipedie kratší než trvalý odkaz).
 const CITOID_TYPES = { encyclopediaArticle: 'inreference', dictionaryEntry: 'inreference', webpage: 'online',
