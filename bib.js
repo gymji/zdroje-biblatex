@@ -212,6 +212,7 @@ export function buildEntry(typeId, values, taken = []) {
   const lines = [];
   for (const f of t.fields.concat(Object.keys(t.fixed || {}))) {
     if (lines.some(l => l.startsWith(`  ${f} `))) continue;
+    if (f === 'urldate' && !String(v.url ?? '').trim()) continue;   // datum citování jen s adresou
     let val;
     if (F[f].kind === 'names') {
       val = formatNames(v[f]);
