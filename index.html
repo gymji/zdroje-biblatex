@@ -57,7 +57,15 @@
        (nahradí <code>Bibliografie.bib</code>), nebo záznamy kopírujte po jednom.
        Svůj dosavadní <code>.bib</code> můžete nahrát: záznamy se přidají sem, zkontrolují a půjdou upravit
        (klíče zůstanou stejné).</p>
-    <ol id="mine"></ol>
+    <div class="table-wrap">
+      <table id="mine-table" hidden>
+        <thead><tr>
+          <th class="c-n"></th><th class="c-klic">Klíč</th><th class="c-autor">Autor</th><th class="c-rok">Rok</th>
+          <th class="c-nazev">Název</th><th class="c-druh">Druh</th><th class="c-stav">Stav</th><th class="c-akce"></th>
+        </tr></thead>
+        <tbody id="mine"></tbody>
+      </table>
+    </div>
     <div class="row">
       <button id="download" type="button">Stáhnout Bibliografie.bib</button>
       <button id="copy-all" type="button" class="secondary">Kopírovat vše</button>

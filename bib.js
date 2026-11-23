@@ -414,6 +414,19 @@ export function fromTeX(s) {
     .replace(/\\([%&#$_])/g, '$1');
 }
 
+// Jen pro zobrazení v přehledu: {\LaTeX} --- \emph{x} → LaTeX — x (do .bib se nepoužívá)
+export function plainTeX(s) {
+  return fromTeX(s)
+    .replace(/(^|[^\\])~/g, '$1 ')
+    .replace(/\\~\{\}/g, '~')
+    .replace(/\\(XeLaTeX|LaTeX|BibTeX|TeX)(?![A-Za-z])/g, '$1')
+    .replace(/\\ /g, ' ')
+    .replace(/\\[A-Za-z]+\s*/g, '')
+    .replace(/---/g, '—').replace(/--/g, '–')
+    .replace(/[{}]/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
 // "Příjmení, Jméno and Jméno Příjmení and {Instituce}" → [{last, first, inst}]
 export function parseNames(s) {
   const clean = x => fromTeX(x).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();

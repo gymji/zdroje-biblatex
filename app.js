@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, parseBib, toForm } from './bib.js';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, parseBib, toForm, plainTeX } from './bib.js';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -172,28 +172,42 @@ $('clear').addEventListener('click', clearForm);
 
 // ---------- moje zdroje ----------
 function renderMine() {
-  const ol = $('mine');
-  ol.innerHTML = '';
+  const tbody = $('mine');
+  tbody.innerHTML = '';
+  $('mine-table').hidden = !mine.length;
   $('count').textContent = mine.length ? `(${mine.length})` : '';
+  // buňka tabulky; dlouhý text se zkrátí (CSS), celý je v title
+  const cell = (cls, text, el = 'span') => {
+    const td = document.createElement('td');
+    td.className = cls;
+    if (text !== undefined) {
+      const x = document.createElement(el);
+      x.textContent = text;
+      td.title = text;
+      td.appendChild(x);
+    }
+    return td;
+  };
   mine.forEach((m, i) => {
-    const li = document.createElement('li');
-    if (i === editIndex) li.className = 'editing';
-    const code = document.createElement('code');
-    code.textContent = m.key;
-    const v = m.values, a = (v.author || []).find(n => (n.last || '').trim());
-    const year = v.year || (v.date || '').slice(0, 4);
-    const info = document.createElement('span');
-    info.textContent = ' ' + (a ? a.last + (year ? ' ' : ': ') : '') + (year ? `(${year}): ` : '') + (v.title || '') + ' ';
-    const kind = document.createElement('small');
-    kind.textContent = typeById(m.type).label.split(/ \(|,/)[0] + ' ';
-    // stav: stejná kontrola jako ve formuláři (nahraným zdrojům může něco chybět)
+    const tr = document.createElement('tr');
+    if (i === editIndex) tr.className = 'editing';
+    const v = m.values, authors = (v.author || []).filter(n => (n.last || '').trim());
     const r = buildEntry(m.type, m.values, others(i), { key: m.key, extra: m.extra });
+    // stav: stejná kontrola jako ve formuláři (nahraným zdrojům může něco chybět)
     const err = r.problems.filter(p => p.level === 'chyba').length, warn = r.problems.length - err;
-    const stav = document.createElement('span');
-    stav.className = 'stav ' + (err ? 'err' : warn ? 'warn' : 'ok');
-    stav.textContent = err ? plural(err, 'chyba', 'chyby', 'chyb') : warn ? `${warn} upozornění` : 'OK';
+    const stav = cell('c-stav', err ? plural(err, 'chyba', 'chyby', 'chyb') : warn ? `${warn} upozornění` : '');
+    stav.firstChild.className = 'stav ' + (err ? 'err' : warn ? 'warn' : 'ok');
     stav.title = r.problems.map(p => p.msg).join('\n');
-    li.append(code, info, kind, stav,
+    const akce = cell('c-akce');
+    tr.append(
+      cell('c-n', `${i + 1}.`),
+      cell('c-klic', m.key, 'code'),
+      cell('c-autor', authors.length ? plainTeX(authors[0].last) + (authors.length > 1 ? ' a kol.' : '') : ''),
+      cell('c-rok', v.year || (v.date || '').slice(0, 4)),
+      cell('c-nazev', plainTeX(v.title || '')),
+      cell('c-druh', typeById(m.type).label.split(/ \(|,/)[0]),
+      stav, akce);
+    akce.append(
       button('upravit', 'secondary small', () => {
         current = { type: m.type, values: structuredClone(m.values), key: m.own ? m.key : undefined, extra: m.extra };
         editIndex = i; renderMine(); renderFields(); update();
@@ -205,7 +219,7 @@ function renderMine() {
         if (editIndex === i) editIndex = null; else if (editIndex > i) editIndex--;
         saveMine(); renderMine(); update();
       }, 'Smazat'));
-    ol.appendChild(li);
+    tbody.appendChild(tr);
   });
 }
 const allText = () => head.concat(mine.map(m => m.text)).join('\n\n') + '\n';

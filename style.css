@@ -17,7 +17,7 @@ body {
   margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-header, main, footer { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+header, main, footer { max-width: 1140px; margin: 0 auto; padding: 0 16px; }
 header { padding-top: 24px; }
 h1 { margin: 0 0 4px; font-size: 1.8rem; }
 h2 { margin: 0 0 12px; font-size: 1.15rem; }
@@ -62,11 +62,39 @@ pre {
 #problems .warn { background: var(--warn-bg); color: var(--warn); }
 .hint.ai { background: var(--ai-bg); color: var(--text); padding: 8px 10px; border-radius: 6px; }
 .msg { min-height: 1.5em; margin: 8px 0 0; color: var(--muted); }
-#mine li { margin-bottom: 6px; }
-#mine li button { margin-left: 4px; }
-#mine li.editing { background: var(--ai-bg); border-radius: 6px; }
+/* Moje zdroje: pevné sloupce, dlouhý text se zkrátí „…“ (celý v title) */
+.table-wrap { overflow-x: auto; margin: 8px 0 12px; }
+#mine-table { width: 100%; min-width: 520px; border-collapse: collapse; table-layout: fixed; font-size: 0.92rem; }
+#mine-table th { text-align: left; font-size: 0.8rem; font-weight: 600; color: var(--muted); padding: 4px 6px; border-bottom: 2px solid var(--line); }
+#mine-table td { padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#mine-table tbody tr:hover { background: var(--code); }
+#mine-table tr.editing { background: var(--ai-bg); }
+#mine-table .c-n { width: 2.2em; color: var(--muted); text-align: right; }
+#mine-table .c-klic { width: 10em; }
+#mine-table .c-klic code { font-weight: 700; color: var(--accent); background: none; padding: 0; }
+#mine-table .c-autor { width: 9em; }
+#mine-table .c-rok { width: 3.6em; }
+#mine-table td.c-nazev { font-style: italic; }
+#mine-table .c-druh { width: 9em; color: var(--muted); font-size: 0.85rem; }
+#mine-table .c-stav { width: 7.5em; }
+#mine-table .c-akce { width: 15em; text-align: right; overflow: visible; }
+#mine-table .c-akce button { margin-left: 4px; }
+@media (max-width: 760px) { #mine-table .c-autor, #mine-table .c-druh { display: none; } }
+/* mobil: každý zdroj na tři řádky — klíč, rok, stav / název / tlačítka */
+@media (max-width: 600px) {
+  #mine-table, #mine-table tbody { display: block; min-width: 0; }
+  #mine-table thead, #mine-table .c-n { display: none; }
+  #mine-table tr { display: grid; grid-template-columns: minmax(0, 1fr) 3.6em 7.5em; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  #mine-table td[class] { display: block; width: auto; min-width: 0; border: 0; padding: 1px 4px; }
+  #mine-table td.c-n, #mine-table td.c-autor, #mine-table td.c-druh { display: none; }
+  #mine-table td.c-stav { text-align: right; }
+  #mine-table .c-klic { grid-area: 1 / 1; }
+  #mine-table .c-rok { grid-area: 1 / 2; }
+  #mine-table .c-stav { grid-area: 1 / 3; }
+  #mine-table .c-nazev { grid-area: 2 / 1 / 3 / 4; }
+  #mine-table .c-akce { grid-area: 3 / 1 / 4 / 4; }
+}
 .stav { font-size: 0.8rem; padding: 0 6px; border-radius: 4px; cursor: help; }
-.stav.ok { color: var(--muted); }
 .stav.warn { background: var(--warn-bg); color: var(--warn); }
 .stav.err { background: var(--err-bg); color: var(--err); }
 .cite p { margin: 12px 0 0; }

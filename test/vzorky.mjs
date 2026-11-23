@@ -1,5 +1,5 @@
 // Vzorová data pro každý druh zdroje → generated.bib (test: node test/vzorky.mjs)
-import { TYPES, buildEntry, parseBib, toForm } from '../bib.js';
+import { TYPES, buildEntry, parseBib, toForm, plainTeX } from '../bib.js';
 import { writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -101,3 +101,10 @@ assert.equal(web.type, 'online');
 assert.deepEqual(web.extra, { year: '{2025}' });
 assert.ok(buildEntry(web.type, web.values, [], { key: web.key }).problems.some(x => /Datum citování/.test(x.msg)));
 console.log('OK: nahrání cizího .bib');
+
+// Přehled Mých zdrojů: názvy bez příkazů LaTeXu
+assert.equal(plainTeX('The \\LaTeX\\ Companion'), 'The LaTeX Companion');
+assert.equal(plainTeX('{\\LaTeX} --- Wikipedie, otevřená encyklopedie'), 'LaTeX — Wikipedie, otevřená encyklopedie');
+assert.equal(plainTeX('{Zur Elektrodynamik bewegter K{\\"o}rper}. ({German}) [{On} the \\emph{bodies}]'),
+  'Zur Elektrodynamik bewegter Körper. (German) [On the bodies]');
+console.log('OK: názvy pro přehled');
