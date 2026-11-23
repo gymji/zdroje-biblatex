@@ -287,6 +287,22 @@ export function fromOpenLibrary(b, isbn) {
 
 // --- Souborný katalog CPK (knihovny.cz, VuFind API) — české a slovenské knihy ---
 // r = jeden záznam (pole title, primaryAuthors, placesOfPublication, publishers, publicationDates, edition)
+// Hlavní autor + spoluautoři. Katalog u spoluautorů neuvádí roli (překladatel, ilustrátor, osoba,
+// o které kniha je) → bereme jen osoby s datem narození (instituce a nakladatelství ho nemají),
+// bez duplicit; student seznam zkontroluje (hláška v app.js podle `note`).
+function cpkAuthors(r) {
+  const seen = new Set(), out = [];
+  const add = (a, needDate) => {
+    const m = String(a).match(/^(.*?),\s*([\d.\s-]+)?\s*$/);
+    if (needDate && !(m && m[2])) return;
+    const name = (m ? m[1] : String(a)).trim();
+    if (!name || seen.has(name)) return;
+    seen.add(name); out.push(splitName(name));
+  };
+  (r.primaryAuthors || []).forEach(a => add(a, false));
+  (r.secondaryAuthors || []).forEach(a => add(a, true));
+  return out;
+}
 const ORD = ['první', 'druhé', 'třetí', 'čtvrté', 'páté', 'šesté', 'sedmé', 'osmé', 'deváté', 'desáté'];
 export function fromCPK(r, isbn) {
   const tidy = s => String(s || '').replace(/[\s:;,/.]+$/, '').replace(/^\[|\]$/g, '').trim();
@@ -296,11 +312,12 @@ export function fromCPK(r, isbn) {
   if (!edition) { const i = ORD.findIndex(o => ed.startsWith(o)); if (i >= 0) edition = String(i + 1); }
   if (edition === '1') edition = '';
   return { type: 'book', values: {
-    author: (r.primaryAuthors || []).map(a => splitName(a.replace(/,\s*[\d-]+\s*$/, ''))),
+    author: cpkAuthors(r),
     title: title || '', subtitle: sub.join(' : '), edition,
     location: tidy((r.placesOfPublication || [])[0]),
     publisher: tidy((r.publishers || [])[0]),
-    year: (String((r.publicationDates || [])[0] || '').match(/\d{4}/) || [''])[0], isbn } };
+    year: (String((r.publicationDates || [])[0] || '').match(/\d{4}/) || [''])[0], isbn },
+    note: (r.secondaryAuthors || []).length ? 'Katalog uvádí i další osoby (spoluautory, ale i překladatele či ilustrátory). Autory porovnejte s titulní stranou a nadbytečné odeberte (×).' : '' };
 }
 
 // --- Dohledání podle adresy (Wikimedia Citoid, formát „mediawiki“ = položka Zotera) ---

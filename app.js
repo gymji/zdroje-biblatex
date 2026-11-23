@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123d';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123e';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -320,7 +320,7 @@ $('lookup').addEventListener('submit', async e => {
     current = { ...current, type: r.type, values: r.values };
     renderFields(); update();
     msg.textContent = web ? 'Nalezeno. U webové stránky údaje vždy zkontrolujte — hlavně druh zdroje, autora, název a datum.'
-                          : 'Nalezeno. Údaje zkontrolujte a doplňte chybějící (např. místo vydání).';
+                          : 'Nalezeno. Údaje zkontrolujte a doplňte chybějící (např. místo vydání).' + (r.note ? ' ' + r.note : '');
   } catch (err) {
     // vlastní hlášky jsou Error; jinak vypršel čas nebo selhalo spojení
     const text = err.name === 'TimeoutError' ? 'Služba neodpověděla včas.'
@@ -332,7 +332,7 @@ $('lookup').addEventListener('submit', async e => {
 // Souborný katalog českých knihoven (CORS *); české/slovenské ISBN (80-…) zkoušíme nejdřív
 async function cpk(isbn, raw) {
   try {
-    const f = ['title', 'primaryAuthors', 'placesOfPublication', 'publishers', 'publicationDates', 'edition']
+    const f = ['title', 'primaryAuthors', 'secondaryAuthors', 'placesOfPublication', 'publishers', 'publicationDates', 'edition']
       .map(x => '&field[]=' + x).join('');
     const res = await get(`https://www.knihovny.cz/api/v1/search?lookfor=isbn:${isbn}&limit=1${f}`, 8000);
     const r = ((await res.json()).records || [])[0];
