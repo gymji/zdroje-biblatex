@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zdroj → BibLaTeX</title>
 <meta name="description" content="Formulář pro tvorbu záznamů seznamu literatury (BibLaTeX, ČSN ISO 690) pro maturitní a seminární práce.">
-<link rel="stylesheet" href="style.css?v=20261123j">
+<link rel="stylesheet" href="style.css?v=20261123k">
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -134,13 +134,19 @@
   <details class="card howto">
     <summary><span class="step step-ico"><svg class="ico" aria-hidden="true" focusable="false"><use href="#ico-latex"/></svg></span> <span class="h-text">Jak se záznam použije v LaTeXu</span></summary>
     <ol>
-      <li>Na Overleafu otevřete soubor <code>Bibliografie.bib</code> a záznam vložte na konec.</li>
-      <li>V textu napište <code>\parencite{klíč}</code> (odkaz v závorce), <code>\cite{klíč}</code>
-          nebo <code>\footcite{klíč}</code> (pod čarou). Stránku přidáte takto:
-          <code>\parencite[s.~45]{klíč}</code>.</li>
+      <li>Na Overleafu otevřete soubor <code>Bibliografie.bib</code> a záznam vložte na konec
+          (nebo nahrajte stažený soubor z Mých zdrojů).</li>
+      <li>V textu citujte <code>~\parencite{klíč}</code> — vysází se [1], u stylu autor–rok
+          (Novák, 2020). Se stránkou: <code>~\parencite[s.~45]{klíč}</code> → [1, s. 45].
+          Vlnka <code>~</code> zabrání odtržení citace na další řádek.</li>
+      <li>Jmenujete-li autora ve větě: <code>\textcite{klíč} uvádí …</code> → Novák [1] uvádí …
+          Citace pod čarou: <code>\footcite{klíč}</code>. V celé práci používejte jen jeden způsob
+          (závorky, nebo poznámky pod čarou).</li>
       <li>Přeložte (Recompile). Seznam literatury obsahuje jen zdroje, které v textu citujete.</li>
-      <li>Styl (číslovaný [1] nebo autor–rok) se volí v preambuli: <code>style=iso-numeric</code>
-          nebo <code>style=iso-authoryear</code>.</li>
+      <li>Styl se volí v <code>mprace.tex</code> šablony maturitní práce: <code>\usepackage{MP}</code>
+          = číslované [1], <code>\usepackage[autorrok]{MP}</code> = autor–rok (Novák, 2020).
+          Citace v textu přitom zůstávají stejné. (Ve vlastním dokumentu bez šablony:
+          <code>style=iso-numeric</code> nebo <code>style=iso-authoryear</code> u balíčku biblatex.)</li>
     </ol>
     <p>Umělou inteligenci citujete jen tehdy, když z ní doslovně převezmete text, obrázek nebo kód.
        Její použití ale vždy popište v prohlášení (nástroj, účel, rozsah).</p>
@@ -163,6 +169,6 @@
      <a href="https://www.jirovcovka.net">www.jirovcovka.net</a> ·
      <a href="https://github.com/gymji/zdroje-biblatex/blob/main/LICENSE">licence MIT</a></p>
 </footer>
-<script type="module" src="app.js?v=20261123j"></script>
+<script type="module" src="app.js?v=20261123k"></script>
 </body>
 </html>

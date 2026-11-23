@@ -3,8 +3,8 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123j';
-import { PRIKLADY } from './priklady.js?v=20261123j';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123k';
+import { PRIKLADY } from './priklady.js?v=20261123k';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -150,9 +150,10 @@ function update() {
   if (missing.length)
     li(strict ? 'err' : 'info', (strict ? 'Chybí povinné údaje: ' : 'Povinné údaje (*): ') + missing.join(', ') + '.');
   for (const p of r.problems) if (!p.field) li(p.level === 'chyba' ? 'err' : 'warn', p.msg);
-  $('cite').textContent = `\\parencite{${r.key}}      % odkaz v závorce\n` +
-                          `\\parencite[s.~45]{${r.key}} % se stránkou\n` +
-                          `\\footcite{${r.key}}         % v poznámce pod čarou`;
+  $('cite').textContent = `~\\parencite{${r.key}}        % v závorce: [1] nebo (Novák, 2020)\n` +
+                          `~\\parencite[s.~45]{${r.key}} % se stránkou: [1, s. 45]\n` +
+                          `\\textcite{${r.key}}          % autor ve větě: Novák [1]\n` +
+                          `\\footcite{${r.key}}          % v poznámce pod čarou`;
 }
 
 async function copy(text, msgEl, ok) {
