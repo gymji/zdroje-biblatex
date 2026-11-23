@@ -54,6 +54,9 @@ console.log(`OK: round-trip ${p.entries.length} záznamů`);
 const cizi = parseBib(String.raw`% Encoding: UTF-8
 @string{pe = "Physics Education"}
 @Comment{jabref-meta: databaseType:biblatex;}
+@Control{biblatex-control,
+  options = {3.11:0:0:1:0:1:1:0:0:0:0:1:2:1:99:1:0:0:3:1:79:+:+:nty},
+}
 @ARTICLE{Novak:2020,
   author = {Nov{\'a}k, Jan and Petr {\v{C}}ern{\'y} and {{Fyzik\'aln\'i \'ustav AV \v{C}R}}},
   title = "M{\v e}{\v r}en{\'\i} \& kyvadlo",
@@ -70,7 +73,9 @@ const cizi = parseBib(String.raw`% Encoding: UTF-8
 @misc{chatgpt, author={{OpenAI}}, title={ChatGPT}, howpublished={online; AI chatbot}, year={2025}}
 @online{web, title={Kyvadlo}, url={https://cs.wikipedia.org/wiki/Kyvadlo}, year={2025}}`);
 assert.deepEqual(cizi.errors, []);
-assert.equal(cizi.head.length, 1);
+assert.deepEqual(cizi.head, ['@string{pe = "Physics Education"}', '@Comment{jabref-meta: databaseType:biblatex;}']);
+assert.equal(cizi.skipped, 1);
+assert.equal(cizi.entries.length, 4);
 const [a, k, ai, web] = cizi.entries.map(toForm);
 assert.equal(a.type, 'article');
 assert.equal(a.key, 'Novak:2020');

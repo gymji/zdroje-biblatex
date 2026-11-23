@@ -251,6 +251,7 @@ $('upload-file').addEventListener('change', async e => {
        (same ? `, ${same} už v seznamu bylo` : '') + '. '
      : `V souboru ${file.name} není žádný záznam (@book{…}, @article{…} …). `) +
     (bad ? `Chyby má ${plural(bad, 'zdroj', 'zdroje', 'zdrojů')} — klikněte na „upravit“ a doplňte údaje. ` : '') +
+    (p.skipped ? 'Pomocný záznam biblatexu (biblatex-control) vynechán — vytváří se sám při překladu. ' : '') +
     p.errors.join(' ');
 });
 

@@ -359,10 +359,13 @@ function parseFields(s, strings, where, errors) {
 
 const MONTHS = Object.fromEntries('jan feb mar apr may jun jul aug sep oct nov dec'.split(' ').map((m, i) => [m, String(i + 1)]));
 
-// Vrací {entries: [{entry, key, fields, source}], head: [@string/@preamble], errors: [text]}.
-// source = záznam přesně tak, jak byl v souboru.
+// Vrací {entries: [{entry, key, fields, source}], head: [@string/@preamble/@comment], skipped, errors: [text]}.
+// source = záznam přesně tak, jak byl v souboru. head se nezobrazuje, jen uloží.
+// skipped = počet vynechaných @Control{biblatex-control} — biblatex si je při
+// překladu vytváří sám (soubor *-blx.bib), stará kopie by jen škodila.
 export function parseBib(text) {
   const entries = [], head = [], errors = [], strings = { ...MONTHS };
+  let skipped = 0;
   const lineOf = i => text.slice(0, i).split('\n').length;
   let i = 0;
   while ((i = text.indexOf('@', i)) !== -1) {
@@ -380,8 +383,9 @@ export function parseBib(text) {
     if (j >= text.length) { errors.push(`${where}: záznam @${m[1]} nemá konec (chybí zavírací závorka).`); break; }
     const body = text.slice(body0, j), source = text.slice(start, j + 1);
     i = j + 1;
-    if (kind === 'comment') continue;
-    if (kind === 'preamble') { head.push(source); continue; }
+    if (kind === 'control' || /^\s*biblatex-control\s*,/.test(body)) { skipped++; continue; }
+    if (kind === 'comment' && /^\$ biblatex /.test(body)) continue;   // hlavička *-blx.bib
+    if (kind === 'comment' || kind === 'preamble') { head.push(source); continue; }
     if (kind === 'string') {
       for (const [k, f] of Object.entries(parseFields(body, strings, where, errors))) strings[k] = f.value;
       head.push(source);
@@ -392,7 +396,7 @@ export function parseBib(text) {
     const fields = parseFields(comma < 0 ? '' : body.slice(comma + 1), strings, `${where} (${key || 'bez klíče'})`, errors);
     entries.push({ entry: kind, key, fields, source });
   }
-  return { entries, head, errors };
+  return { entries, head, skipped, errors };
 }
 
 // Akcenty LaTeXu → Unicode: {\'a} → á, \v{c} → č, \"o → ö; \% \& \# → znak.
