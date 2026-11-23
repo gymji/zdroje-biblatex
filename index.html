@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zdroj → BibLaTeX</title>
+<meta name="description" content="Formulář pro tvorbu záznamů seznamu literatury (BibLaTeX, ČSN ISO 690) pro maturitní a seminární práce.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Zdroj → BibLaTeX</h1>
+  <p>Vyplňte údaje o zdroji a zkopírujte hotový záznam do souboru <code>Bibliografie.bib</code>
+     ve svém projektu na Overleafu. Podobu citace (ČSN ISO 690) zařídí LaTeX sám.</p>
+</header>
+
+<main>
+  <section class="card" aria-labelledby="h-hledat">
+    <h2 id="h-hledat">1. Dohledat podle DOI nebo ISBN <span class="muted">(nepovinné)</span></h2>
+    <form id="lookup" class="row">
+      <label class="grow">DOI článku nebo ISBN knihy
+        <input id="lookup-id" placeholder="např. 10.1088/1361-6552/aac05e nebo 978-80-214-4123-1" autocomplete="off">
+      </label>
+      <button type="submit">Dohledat</button>
+    </form>
+    <p id="lookup-msg" class="msg" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-zdroj">
+    <h2 id="h-zdroj">2. Druh zdroje a údaje</h2>
+    <label>Druh zdroje
+      <select id="type"></select>
+    </label>
+    <p id="type-hint" class="hint"></p>
+    <form id="fields" autocomplete="off"></form>
+  </section>
+
+  <section class="card" aria-labelledby="h-vysledek">
+    <h2 id="h-vysledek">3. Záznam do <code>Bibliografie.bib</code></h2>
+    <ul id="problems"></ul>
+    <pre id="out" tabindex="0"></pre>
+    <div class="row">
+      <button id="copy" type="button">Kopírovat záznam</button>
+      <button id="save" type="button" class="secondary">Přidat do mých zdrojů</button>
+      <button id="clear" type="button" class="secondary">Vymazat formulář</button>
+    </div>
+    <p id="copy-msg" class="msg" role="status"></p>
+    <div class="cite">
+      <p>V textu práce pak citujete klíčem:</p>
+      <pre id="cite"></pre>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-moje">
+    <h2 id="h-moje">Moje zdroje <span id="count" class="muted"></span></h2>
+    <p class="hint">Ukládají se jen v tomto prohlížeči. Hotový soubor stáhněte a nahrajte na Overleaf
+       (nahradí <code>Bibliografie.bib</code>), nebo záznamy kopírujte po jednom.</p>
+    <ol id="mine"></ol>
+    <div class="row">
+      <button id="download" type="button">Stáhnout Bibliografie.bib</button>
+      <button id="copy-all" type="button" class="secondary">Kopírovat vše</button>
+      <button id="delete-all" type="button" class="danger">Smazat vše</button>
+    </div>
+  </section>
+
+  <details class="card">
+    <summary>Jak se záznam použije v LaTeXu</summary>
+    <ol>
+      <li>Na Overleafu otevřete soubor <code>Bibliografie.bib</code> a záznam vložte na konec.</li>
+      <li>V textu napište <code>\parencite{klíč}</code> (odkaz v závorce), <code>\cite{klíč}</code>
+          nebo <code>\footcite{klíč}</code> (pod čarou). Stránku přidáte takto:
+          <code>\parencite[s.~45]{klíč}</code>.</li>
+      <li>Přeložte (Recompile). Seznam literatury obsahuje jen zdroje, které v textu citujete.</li>
+      <li>Styl (číslovaný [1] nebo autor–rok) se volí v preambuli: <code>style=iso-numeric</code>
+          nebo <code>style=iso-authoryear</code>.</li>
+    </ol>
+    <p>Umělou inteligenci citujete jen tehdy, když z ní doslovně převezmete text, obrázek nebo kód.
+       Její použití ale vždy popište v prohlášení (nástroj, účel, rozsah).</p>
+  </details>
+</main>
+
+<footer>
+  <p><a href="https://github.com/gymji/zdroje-biblatex">zdrojový kód</a>
+     · data DOI: Crossref, ISBN: Google Books / Open Library</p>
+</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>

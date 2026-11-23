@@ -1,0 +1,9 @@
+# pomocné soubory překladu testu
+test/*.aux
+test/*.bbl
+test/*.blg
+test/*.log
+test/*.run.xml
+test/*-blx.bib
+test/*.pdf
+.DS_Store
