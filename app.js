@@ -3,8 +3,8 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123i';
-import { PRIKLADY } from './priklady.js?v=20261123i';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123j';
+import { PRIKLADY } from './priklady.js?v=20261123j';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
