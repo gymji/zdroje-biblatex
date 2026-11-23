@@ -54,13 +54,18 @@
   <section class="card" aria-labelledby="h-moje">
     <h2 id="h-moje">Moje zdroje <span id="count" class="muted"></span></h2>
     <p class="hint">Ukládají se jen v tomto prohlížeči. Hotový soubor stáhněte a nahrajte na Overleaf
-       (nahradí <code>Bibliografie.bib</code>), nebo záznamy kopírujte po jednom.</p>
+       (nahradí <code>Bibliografie.bib</code>), nebo záznamy kopírujte po jednom.
+       Svůj dosavadní <code>.bib</code> můžete nahrát: záznamy se přidají sem, zkontrolují a půjdou upravit
+       (klíče zůstanou stejné).</p>
     <ol id="mine"></ol>
     <div class="row">
       <button id="download" type="button">Stáhnout Bibliografie.bib</button>
       <button id="copy-all" type="button" class="secondary">Kopírovat vše</button>
+      <button id="upload" type="button" class="secondary">Nahrát .bib</button>
       <button id="delete-all" type="button" class="danger">Smazat vše</button>
     </div>
+    <input id="upload-file" type="file" accept=".bib,.txt,text/plain" hidden>
+    <p id="mine-msg" class="msg" role="status"></p>
   </section>
 
   <details class="card">

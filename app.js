@@ -3,18 +3,23 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary } from './bib.js';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, parseBib, toForm } from './bib.js';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
+const HEAD = STORE + ':hlavicka';       // @string/@preamble z nahraného .bib
 const today = () => new Date().toISOString().slice(0, 10);
 
 // --- localStorage může chybět (soukromé okno) → vše v try/catch ---
-function loadMine() { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } }
-function saveMine(list) { try { localStorage.setItem(STORE, JSON.stringify(list)); } catch { /* nic */ } }
+function load(k) { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
+function save(k, x) { try { localStorage.setItem(k, JSON.stringify(x)); } catch { /* nic */ } }
+const saveMine = () => { save(STORE, mine); save(HEAD, head); };
 
-let mine = loadMine();
+let mine = load(STORE), head = load(HEAD);
+// key = vlastní klíč a extra = další pole jen u zdroje z nahraného .bib
 let current = { type: 'book', values: {} };
+let editIndex = null;                   // který z mých zdrojů se právě upravuje
+const plural = (n, a, b, c) => `${n} ${n === 1 ? a : n < 5 ? b : c}`;
 
 // ---------- výběr druhu zdroje ----------
 const sel = $('type');
@@ -75,6 +80,13 @@ function renderFields() {
     }
     form.appendChild(wrap);
   }
+  const extra = Object.keys(current.extra || {});
+  if (extra.length) {
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'Další pole ze souboru se zachovají beze změny: ' + extra.join(', ');
+    form.appendChild(p);
+  }
   if (t.fixed) {
     const p = document.createElement('p');
     p.className = 'hint';
@@ -117,9 +129,11 @@ function button(text, cls, on, title) {
 
 // ---------- výstup ----------
 let lastEntry = null;
+const others = i => mine.filter((m, j) => j !== i).map(m => m.key);
 function update() {
-  const r = buildEntry(current.type, current.values, mine.map(m => m.key));
+  const r = buildEntry(current.type, current.values, others(editIndex), { key: current.key, extra: current.extra });
   lastEntry = r;
+  $('save').textContent = editIndex === null ? 'Přidat do mých zdrojů' : 'Uložit změny';
   $('out').textContent = r.text;
   const ul = $('problems');
   ul.innerHTML = '';
@@ -146,12 +160,15 @@ $('copy').addEventListener('click', () => {
 });
 $('save').addEventListener('click', () => {
   if (lastEntry.problems.some(p => p.level === 'chyba')) { flash($('copy-msg'), 'Nejdřív doplňte povinná pole.'); return; }
-  mine.push({ key: lastEntry.key, text: lastEntry.text, type: current.type, values: structuredClone(current.values) });
-  saveMine(mine); renderMine();
-  flash($('copy-msg'), `Přidáno do mých zdrojů jako ${lastEntry.key}.`);
-  update();
+  const item = { key: lastEntry.key, text: lastEntry.text, type: current.type, values: structuredClone(current.values) };
+  if (current.key) Object.assign(item, { own: true, extra: current.extra });
+  if (editIndex === null) mine.push(item); else mine[editIndex] = item;
+  flash($('copy-msg'), editIndex === null ? `Přidáno do mých zdrojů jako ${item.key}.` : `Změny uloženy (${item.key}).`);
+  $('mine-msg').textContent = '';
+  saveMine(); clearForm();             // prázdný formulář → druhé kliknutí nepřidá duplikát
 });
-$('clear').addEventListener('click', () => { current.values = {}; renderFields(); update(); });
+function clearForm() { current = { type: current.type, values: {} }; editIndex = null; renderMine(); renderFields(); update(); }
+$('clear').addEventListener('click', clearForm);
 
 // ---------- moje zdroje ----------
 function renderMine() {
@@ -160,22 +177,38 @@ function renderMine() {
   $('count').textContent = mine.length ? `(${mine.length})` : '';
   mine.forEach((m, i) => {
     const li = document.createElement('li');
+    if (i === editIndex) li.className = 'editing';
     const code = document.createElement('code');
     code.textContent = m.key;
-    const title = document.createElement('span');
-    title.textContent = ' ' + (m.values.title || '') + ' ';
-    li.append(code, title,
+    const v = m.values, a = (v.author || []).find(n => (n.last || '').trim());
+    const year = v.year || (v.date || '').slice(0, 4);
+    const info = document.createElement('span');
+    info.textContent = ' ' + (a ? a.last + (year ? ' ' : ': ') : '') + (year ? `(${year}): ` : '') + (v.title || '') + ' ';
+    const kind = document.createElement('small');
+    kind.textContent = typeById(m.type).label.split(/ \(|,/)[0] + ' ';
+    // stav: stejná kontrola jako ve formuláři (nahraným zdrojům může něco chybět)
+    const r = buildEntry(m.type, m.values, others(i), { key: m.key, extra: m.extra });
+    const err = r.problems.filter(p => p.level === 'chyba').length, warn = r.problems.length - err;
+    const stav = document.createElement('span');
+    stav.className = 'stav ' + (err ? 'err' : warn ? 'warn' : 'ok');
+    stav.textContent = err ? plural(err, 'chyba', 'chyby', 'chyb') : warn ? `${warn} upozornění` : 'OK';
+    stav.title = r.problems.map(p => p.msg).join('\n');
+    li.append(code, info, kind, stav,
       button('upravit', 'secondary small', () => {
-        current = { type: m.type, values: structuredClone(m.values) };
-        mine.splice(i, 1); saveMine(mine); renderMine(); renderFields(); update();
+        current = { type: m.type, values: structuredClone(m.values), key: m.own ? m.key : undefined, extra: m.extra };
+        editIndex = i; renderMine(); renderFields(); update();
         $('h-zdroj').scrollIntoView({ behavior: 'smooth' });
       }),
       button('kopírovat', 'secondary small', () => copy(m.text, $('copy-msg'), `Zkopírováno: ${m.key}`)),
-      button('×', 'danger small', () => { mine.splice(i, 1); saveMine(mine); renderMine(); update(); }, 'Smazat'));
+      button('×', 'danger small', () => {
+        mine.splice(i, 1);
+        if (editIndex === i) editIndex = null; else if (editIndex > i) editIndex--;
+        saveMine(); renderMine(); update();
+      }, 'Smazat'));
     ol.appendChild(li);
   });
 }
-const allText = () => mine.map(m => m.text).join('\n\n') + '\n';
+const allText = () => head.concat(mine.map(m => m.text)).join('\n\n') + '\n';
 $('download').addEventListener('click', () => {
   if (!mine.length) return;
   const a = document.createElement('a');
@@ -186,10 +219,43 @@ $('download').addEventListener('click', () => {
 });
 $('copy-all').addEventListener('click', () => mine.length && copy(allText(), $('copy-msg'), `Zkopírováno ${mine.length} záznamů.`));
 $('delete-all').addEventListener('click', () => {
-  if (mine.length && confirm('Opravdu smazat všechny uložené zdroje?')) { mine = []; saveMine(mine); renderMine(); update(); }
+  if (mine.length && confirm('Opravdu smazat všechny uložené zdroje?')) {
+    mine = []; head = []; editIndex = null; saveMine(); renderMine(); update(); $('mine-msg').textContent = '';
+  }
+});
+
+// ---------- nahrání vlastního .bib ----------
+$('upload').addEventListener('click', () => $('upload-file').click());
+$('upload-file').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const p = parseBib(await file.text());
+  let added = 0, same = 0;
+  for (const en of p.entries) {
+    if (mine.some(m => m.text === en.source)) { same++; continue; }
+    const f = toForm(en);
+    if (f.key) mine.push({ key: f.key, text: en.source, type: f.type, values: f.values, extra: f.extra, own: true });
+    else {                              // záznam bez klíče → klíč vytvoříme a záznam sestavíme znovu
+      const r = buildEntry(f.type, f.values, mine.map(m => m.key), { extra: f.extra });
+      mine.push({ key: r.key, text: r.text, type: f.type, values: f.values, extra: f.extra });
+    }
+    added++;
+  }
+  for (const h of p.head) if (!head.includes(h)) head.push(h);
+  saveMine(); renderMine(); update();
+  const bad = mine.filter((m, i) => buildEntry(m.type, m.values, others(i), { key: m.key, extra: m.extra })
+                                      .problems.some(x => x.level === 'chyba')).length;
+  $('mine-msg').textContent =
+    (p.entries.length ? `Ze souboru ${file.name}: přidáno ${plural(added, 'zdroj', 'zdroje', 'zdrojů')}` +
+       (same ? `, ${same} už v seznamu bylo` : '') + '. '
+     : `V souboru ${file.name} není žádný záznam (@book{…}, @article{…} …). `) +
+    (bad ? `Chyby má ${plural(bad, 'zdroj', 'zdroje', 'zdrojů')} — klikněte na „upravit“ a doplňte údaje. ` : '') +
+    p.errors.join(' ');
 });
 
 // ---------- dohledání podle DOI / ISBN ----------
+const get = (url, ms = 8000) => fetch(url, { signal: AbortSignal.timeout(ms) });
 $('lookup').addEventListener('submit', async e => {
   e.preventDefault();
   const raw = $('lookup-id').value.trim();
@@ -200,7 +266,7 @@ $('lookup').addEventListener('submit', async e => {
     let r;
     const doi = raw.replace(/^https?:\/\/(dx\.)?doi\.org\//, '').replace(/^doi:\s*/i, '');
     if (/^10\.\d{4,}\//.test(doi)) {
-      const res = await fetch('https://api.crossref.org/works/' + encodeURIComponent(doi));
+      const res = await get('https://api.crossref.org/works/' + encodeURIComponent(doi));
       if (!res.ok) throw new Error('DOI v databázi Crossref nenalezeno.');
       r = fromCrossref((await res.json()).message);
     } else {
@@ -208,21 +274,24 @@ $('lookup').addEventListener('submit', async e => {
       if (![10, 13].includes(isbn.length)) throw new Error('Nevypadá to jako DOI (10.…/…) ani ISBN (10 nebo 13 číslic).');
       r = await lookupIsbn(isbn, raw);
     }
-    current = { type: r.type, values: r.values };
+    current = { ...current, type: r.type, values: r.values };
     renderFields(); update();
     msg.textContent = 'Nalezeno. Údaje zkontrolujte a doplňte chybějící (např. místo vydání).';
   } catch (err) {
-    msg.textContent = err.message + ' Vyplňte údaje ručně.';
+    // vlastní hlášky jsou Error; jinak vypršel čas nebo selhalo spojení
+    const text = err.name === 'TimeoutError' ? 'Služba neodpověděla včas.'
+               : err.constructor === Error ? err.message : 'Službu se nepodařilo kontaktovat.';
+    msg.textContent = text + ' Vyplňte údaje ručně.';
   }
 });
 
 async function lookupIsbn(isbn, raw) {
   try {
-    const res = await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn);
+    const res = await get('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn, 5000);
     const data = await res.json();
     if (data.items && data.items.length) return fromGoogleBooks(data.items[0].volumeInfo, raw);
   } catch { /* zkusíme Open Library */ }
-  const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+  const res = await get(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
   const data = await res.json();
   const b = data['ISBN:' + isbn];
   if (!b) throw new Error('ISBN se nepodařilo dohledat (české knihy často chybí).');

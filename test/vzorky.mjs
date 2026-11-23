@@ -1,6 +1,7 @@
 // Vzorová data pro každý druh zdroje → generated.bib (test: node test/vzorky.mjs)
-import { TYPES, buildEntry } from '../bib.js';
+import { TYPES, buildEntry, parseBib, toForm } from '../bib.js';
 import { writeFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
 
 const A = (last, first = '', inst = false) => ({ last, first, inst });
 const S = {
@@ -33,5 +34,65 @@ for (const t of TYPES) {
   out.push(`% ${t.label}\n${r.text}`);
   for (const p of r.problems) console.log(`${t.id}: ${p.level}: ${p.msg}`);
 }
-writeFileSync(new URL('generated.bib', import.meta.url), out.join('\n\n') + '\n');
+const bib = out.join('\n\n') + '\n';
+writeFileSync(new URL('generated.bib', import.meta.url), bib);
 console.log(`OK: ${TYPES.length} záznamů → test/generated.bib`);
+
+// Nahrání .bib: vlastní výstup → parseBib → toForm → buildEntry = totéž
+const p = parseBib(bib);
+assert.deepEqual(p.errors, []);
+assert.equal(p.entries.length, TYPES.length);
+p.entries.forEach((e, i) => {
+  const f = toForm(e);
+  assert.equal(f.type, TYPES[i].id, e.key);
+  assert.deepEqual(f.extra, {}, e.key);
+  assert.equal(buildEntry(f.type, f.values, [], { key: f.key }).text, e.source, e.key);
+});
+console.log(`OK: round-trip ${p.entries.length} záznamů`);
+
+// Cizí soubor (Zotero, JabRef …): akcenty, aliasy polí, @string, uvozovky, další pole
+const cizi = parseBib(String.raw`% Encoding: UTF-8
+@string{pe = "Physics Education"}
+@Comment{jabref-meta: databaseType:biblatex;}
+@ARTICLE{Novak:2020,
+  author = {Nov{\'a}k, Jan and Petr {\v{C}}ern{\'y} and {{Fyzik\'aln\'i \'ustav AV \v{C}R}}},
+  title = "M{\v e}{\v r}en{\'\i} \& kyvadlo",
+  journal = pe # " (CZ)",
+  year = 2020, month = jan,
+  pages = {1--10},
+  abstract = {Dlouhý {abstrakt}
+    na dva řádky},
+}
+@book{bezklice,
+  author={Hawking, Stephen W.}, title={Stručná historie času}, address={Praha},
+  publisher={Mladá fronta}, date={1991-01}, isbn={80-204-0185-8}
+}
+@misc{chatgpt, author={{OpenAI}}, title={ChatGPT}, howpublished={online; AI chatbot}, year={2025}}
+@online{web, title={Kyvadlo}, url={https://cs.wikipedia.org/wiki/Kyvadlo}, year={2025}}`);
+assert.deepEqual(cizi.errors, []);
+assert.equal(cizi.head.length, 1);
+const [a, k, ai, web] = cizi.entries.map(toForm);
+assert.equal(a.type, 'article');
+assert.equal(a.key, 'Novak:2020');
+assert.deepEqual(a.values.author, [
+  { last: 'Novák', first: 'Jan', inst: false },
+  { last: 'Černý', first: 'Petr', inst: false },
+  { last: 'Fyzikální ústav AV ČR', first: '', inst: true }]);
+assert.equal(a.values.title, 'Měření & kyvadlo');
+assert.equal(a.values.journaltitle, 'Physics Education (CZ)');
+assert.equal(a.values.year, '2020');
+assert.deepEqual(a.extra, { month: 'jan', abstract: '{Dlouhý {abstrakt}\n    na dva řádky}' });
+const ra = buildEntry(a.type, a.values, ['Novak:2020'], { key: a.key, extra: a.extra });
+assert.match(ra.text, /^@article\{Novak:2020,/);
+assert.match(ra.text, /title = \{Měření \\& kyvadlo\}/);
+assert.match(ra.text, /author = \{Novák, Jan and Černý, Petr and \{Fyzikální ústav AV ČR\}\}/);
+assert.match(ra.text, /  month = jan,\n  abstract = \{Dlouhý/);
+assert.ok(ra.problems.some(x => x.level === 'chyba' && /Novak:2020/.test(x.msg)), 'duplicitní klíč');
+assert.equal(k.type, 'book');
+assert.equal(k.values.location, 'Praha');
+assert.equal(k.values.year, '1991');
+assert.equal(ai.type, 'ai');
+assert.equal(web.type, 'online');
+assert.deepEqual(web.extra, { year: '{2025}' });
+assert.ok(buildEntry(web.type, web.values, [], { key: web.key }).problems.some(x => /Datum citování/.test(x.msg)));
+console.log('OK: nahrání cizího .bib');

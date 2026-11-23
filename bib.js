@@ -178,8 +178,10 @@ export function makeKey(values, taken = []) {
 }
 
 // Sestaví záznam. values = {pole: hodnota, author: [{last, first, inst}] …}
+// key = vlastní klíč (z nahraného .bib — student jím už cituje), extra = další
+// pole ze souboru {pole: zdrojový text hodnoty}, připojí se beze změny.
 // Vrací {key, text, problems: [{level: 'chyba'|'pozor', msg}]}.
-export function buildEntry(typeId, values, taken = []) {
+export function buildEntry(typeId, values, taken = [], { key: ownKey, extra = {} } = {}) {
   const t = typeById(typeId);
   if (!t) throw new Error('Neznámý druh zdroje: ' + typeId);
   const v = { ...(t.defaults || {}), ...values, ...(t.fixed || {}) };
@@ -208,7 +210,9 @@ export function buildEntry(typeId, values, taken = []) {
   if (v.url && !/^https?:\/\//.test(v.url.trim())) problems.push({ level: 'pozor', msg: 'Adresa má začínat https:// nebo http://.' });
   if (v.url && /[%#]/.test(v.url)) problems.push({ level: 'pozor', msg: 'Adresa obsahuje % nebo #. Kdyby překlad hlásil chybu, zkraťte ji (část od # smažte).' });
 
-  const key = makeKey(v, taken);
+  const key = ownKey || makeKey(v, taken);
+  if (ownKey && taken.includes(ownKey))
+    problems.push({ level: 'chyba', msg: `Klíč ${ownKey} má i jiný zdroj v seznamu — klíče se nesmí opakovat.` });
   const lines = [];
   for (const f of t.fields.concat(Object.keys(t.fixed || {}))) {
     if (lines.some(l => l.startsWith(`  ${f} `))) continue;
@@ -230,6 +234,8 @@ export function buildEntry(typeId, values, taken = []) {
     if (!val) continue;
     lines.push(`  ${f} = {${val}},`);
   }
+  for (const [f, raw] of Object.entries(extra))
+    if (!lines.some(l => l.startsWith(`  ${f} `))) lines.push(`  ${f} = ${raw},`);
   const text = `@${t.entry}{${key},\n${lines.join('\n')}\n}`;
   return { key, text, problems };
 }
@@ -240,9 +246,11 @@ export function fromCrossref(msg) {
     'book-chapter': 'incollection', 'proceedings-article': 'inproceedings', 'report': 'report',
     'dissertation': 'thesis', 'dataset': 'dataset', 'posted-content': 'online' };
   const parts = (msg.issued && msg.issued['date-parts'] && msg.issued['date-parts'][0]) || [];
+  // Crossref dává iniciály často bez tečky („S“) → „S.“
+  const dot = s => (s || '').replace(/(^|[\s.-])(\p{Lu})(?=$|[\s-])/gu, '$1$2.');
   const vals = {
-    author: (msg.author || []).map(a => a.family ? { last: a.family, first: a.given || '' } : { last: a.name || '', first: '', inst: true }),
-    editor: (msg.editor || []).map(a => ({ last: a.family || '', first: a.given || '' })),
+    author: (msg.author || []).map(a => a.family ? { last: a.family, first: dot(a.given) } : { last: a.name || '', first: '', inst: true }),
+    editor: (msg.editor || []).map(a => ({ last: a.family || '', first: dot(a.given) })),
     title: (msg.title || [])[0] || '',
     subtitle: (msg.subtitle || [])[0] || '',
     year: parts[0] ? String(parts[0]) : '',
@@ -275,4 +283,175 @@ export function fromOpenLibrary(b, isbn) {
     publisher: ((b.publishers || [])[0] || {}).name || '',
     location: ((b.publish_places || [])[0] || {}).name || '',
     year: ((b.publish_date || '').match(/\d{4}/) || [''])[0], isbn } };
+}
+
+// =========================================================
+// Nahrání vlastního .bib: text → záznamy → hodnoty pro formulář
+// =========================================================
+
+// Rozdělí s na místech, kde odpovídá re (s příznakem y), ale jen mimo složené závorky.
+function splitTop(s, re) {
+  const out = [];
+  let depth = 0, from = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '{') depth++;
+    else if (s[i] === '}') depth--;
+    else if (depth === 0) {
+      re.lastIndex = i;
+      const m = re.exec(s);
+      if (m && m[0]) { out.push(s.slice(from, i)); i += m[0].length - 1; from = i + 1; }
+    }
+  }
+  out.push(s.slice(from));
+  return out.map(x => x.trim()).filter(Boolean);
+}
+
+// {celé v závorkách} — ne {\v{C}}apek
+function wholeBraced(s) {
+  if (s[0] !== '{') return false;
+  let depth = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '{') depth++;
+    else if (s[i] === '}' && --depth === 0) return i === s.length - 1;
+  }
+  return false;
+}
+
+// Pole jednoho záznamu: {pole: {raw: zdrojový text, value: hodnota bez závorek/uvozovek}}
+function parseFields(s, strings, where, errors) {
+  const out = {};
+  let i = 0;
+  for (;;) {
+    while (i < s.length && /[\s,]/.test(s[i])) i++;
+    if (i >= s.length) break;
+    const m = /^([^\s=,{}"#]+)\s*=\s*/.exec(s.slice(i));
+    if (!m) { errors.push(`${where}: nečitelné pole „${s.slice(i, i + 25).trim()}…“ (chybí = nebo čárka?).`); break; }
+    const name = m[1].toLowerCase();
+    i += m[0].length;
+    const from = i;
+    let value = '';
+    for (;;) {
+      if (s[i] === '{' || s[i] === '"') {
+        const q = s[i] === '"';
+        let depth = q ? 0 : 1, j = i + 1;
+        for (; j < s.length; j++) {
+          if (s[j] === '{') depth++;
+          else if (s[j] === '}') { depth--; if (!q && depth === 0) break; }
+          else if (q && s[j] === '"' && depth === 0) break;
+        }
+        value += s.slice(i + 1, j);
+        i = j + 1;
+      } else {
+        const w = /^[^\s,#{}"]+/.exec(s.slice(i));
+        if (!w) break;
+        i += w[0].length;
+        value += /^\d+$/.test(w[0]) ? w[0] : (strings[w[0].toLowerCase()] ?? w[0]);
+      }
+      while (/\s/.test(s[i] || '')) i++;
+      if (s[i] !== '#') break;                      // spojování "a" # b
+      i++;
+      while (/\s/.test(s[i] || '')) i++;
+    }
+    out[name] = { raw: s.slice(from, i).trim(), value };
+  }
+  return out;
+}
+
+const MONTHS = Object.fromEntries('jan feb mar apr may jun jul aug sep oct nov dec'.split(' ').map((m, i) => [m, String(i + 1)]));
+
+// Vrací {entries: [{entry, key, fields, source}], head: [@string/@preamble], errors: [text]}.
+// source = záznam přesně tak, jak byl v souboru.
+export function parseBib(text) {
+  const entries = [], head = [], errors = [], strings = { ...MONTHS };
+  const lineOf = i => text.slice(0, i).split('\n').length;
+  let i = 0;
+  while ((i = text.indexOf('@', i)) !== -1) {
+    const m = /^@\s*([A-Za-z]+)\s*([{(])/.exec(text.slice(i, i + 40));
+    if (!m) { i++; continue; }
+    const kind = m[1].toLowerCase(), paren = m[2] === '(';
+    const start = i, body0 = i + m[0].length;
+    let depth = 0, j = body0;
+    for (; j < text.length; j++) {
+      if (text[j] === '{') depth++;
+      else if (text[j] === '}') { if (depth === 0 && !paren) break; depth--; }
+      else if (text[j] === ')' && paren && depth === 0) break;
+    }
+    const where = `řádek ${lineOf(start)}`;
+    if (j >= text.length) { errors.push(`${where}: záznam @${m[1]} nemá konec (chybí zavírací závorka).`); break; }
+    const body = text.slice(body0, j), source = text.slice(start, j + 1);
+    i = j + 1;
+    if (kind === 'comment') continue;
+    if (kind === 'preamble') { head.push(source); continue; }
+    if (kind === 'string') {
+      for (const [k, f] of Object.entries(parseFields(body, strings, where, errors))) strings[k] = f.value;
+      head.push(source);
+      continue;
+    }
+    const comma = body.indexOf(',');
+    const key = (comma < 0 ? body : body.slice(0, comma)).trim();
+    const fields = parseFields(comma < 0 ? '' : body.slice(comma + 1), strings, `${where} (${key || 'bez klíče'})`, errors);
+    entries.push({ entry: kind, key, fields, source });
+  }
+  return { entries, head, errors };
+}
+
+// Akcenty LaTeXu → Unicode: {\'a} → á, \v{c} → č, \"o → ö; \% \& \# → znak.
+const ACC = { "'": '́', '`': '̀', '^': '̂', '"': '̈', '~': '̃', '=': '̄', '.': '̇',
+              v: '̌', u: '̆', H: '̋', c: '̧', k: '̨', r: '̊' };
+const LETTERS = { ss: 'ß', aa: 'å', AA: 'Å', o: 'ø', O: 'Ø', l: 'ł', L: 'Ł', ae: 'æ', AE: 'Æ', oe: 'œ', OE: 'Œ' };
+const base = x => x === '\\i' ? 'i' : x === '\\j' ? 'j' : x;
+export function fromTeX(s) {
+  return String(s)
+    .replace(/\\([`'^"~=.])\s*(?:\{\s*(\\[ij]|[A-Za-z])\s*\}|(\\[ij]|[A-Za-z]))/g, (m, a, x, y) => base(x || y) + ACC[a])
+    .replace(/\\([vuHckr])(?:\s*\{\s*(\\[ij]|[A-Za-z])\s*\}|\s+([A-Za-z]))/g, (m, a, x, y) => base(x || y) + ACC[a])
+    .replace(/\\(ss|aa|AA|ae|AE|oe|OE|o|O|l|L)(?![A-Za-z])(\{\}|\s*)/g, (m, x) => LETTERS[x])
+    .normalize('NFC')
+    .replace(/\{([^\x00-\x7f])\}/gu, '$1')
+    .replace(/\\([%&#$_])/g, '$1');
+}
+
+// "Příjmení, Jméno and Jméno Příjmení and {Instituce}" → [{last, first, inst}]
+export function parseNames(s) {
+  const clean = x => fromTeX(x).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+  return splitTop(s, /\s+and\s+/iy).map(n => {
+    if (wholeBraced(n)) return { last: clean(n.slice(1, -1)), first: '', inst: true };
+    const parts = splitTop(n, /\s*,\s*/y);
+    if (parts.length > 1) return { last: clean(parts[0]), first: clean(parts[parts.length - 1]), inst: false };
+    const words = splitTop(n, /\s+/y);
+    return { last: clean(words[words.length - 1]), first: clean(words.slice(0, -1).join(' ')), inst: false };
+  });
+}
+
+const ENTRY = { book: 'book', mvbook: 'book', manual: 'book', collection: 'book', mvcollection: 'book', booklet: 'book',
+  inbook: 'inbook', bookinbook: 'inbook', incollection: 'incollection', inproceedings: 'inproceedings',
+  conference: 'inproceedings', article: 'article', periodical: 'periodical', online: 'online', www: 'online',
+  electronic: 'online', inreference: 'inreference', report: 'report', techreport: 'report', thesis: 'thesis',
+  mastersthesis: 'thesis', phdthesis: 'thesis', patent: 'patent', movie: 'movie', video: 'movie',
+  music: 'music', audio: 'music', software: 'software', dataset: 'dataset' };
+const ALIAS = { journal: 'journaltitle', address: 'location', school: 'institution' };
+
+// Záznam z parseBib → {type, values, extra, key} pro formulář a buildEntry.
+export function toForm(e) {
+  const f = e.fields, val = k => (f[k] ? f[k].value : '');
+  let type = ENTRY[e.entry];
+  if (!type) {                                     // @misc, @unpublished … podle obsahu
+    const how = fromTeX(val('howpublished')), title = fromTeX(val('title'));
+    type = /\bAI\b/.test(how) ? 'ai' : /software|aplikace/i.test(how) ? 'software'
+         : /datov/i.test(how) ? 'dataset' : /rozhovor/i.test(how) ? 'interview'
+         : /^(zákon|vyhláška|nařízení)/i.test(title) ? 'legal' : /^(ČSN|ISO|EN)\b/.test(title) ? 'standard' : 'misc';
+  }
+  const t = typeById(type), values = {}, extra = {};
+  for (const [name, { raw, value }] of Object.entries(f)) {
+    let k = ALIAS[name] && !f[ALIAS[name]] ? ALIAS[name] : name, v = value;
+    if (type === 'report' && k === 'institution' && !f.publisher) k = 'publisher';
+    if (k === 'date' && !t.fields.includes('date') && t.fields.includes('year') && !f.year) { k = 'year'; v = v.slice(0, 4); }
+    if (t.fixed && k in t.fixed) continue;
+    if (!t.fields.includes(k) || k in values) { extra[name] = raw; continue; }
+    if (F[k].kind === 'names') values[k] = parseNames(v);
+    else if (['url', 'doi'].includes(k)) values[k] = v.trim();
+    else values[k] = fromTeX(v).replace(/\s+/g, ' ').trim();
+  }
+  if (type === 'thesis' && !values.type)
+    values.type = { mastersthesis: 'Diplomová práce', phdthesis: 'Disertační práce' }[e.entry];
+  return { type, values, extra, key: e.key };
 }
