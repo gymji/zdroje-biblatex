@@ -1,5 +1,5 @@
 // Vzorová data pro každý druh zdroje → generated.bib (test: node test/vzorky.mjs)
-import { TYPES, buildEntry, parseBib, toForm, plainTeX } from '../bib.js';
+import { TYPES, buildEntry, parseBib, toForm, plainTeX, fromCitoid } from '../bib.js';
 import { writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -108,3 +108,29 @@ assert.equal(plainTeX('{\\LaTeX} --- Wikipedie, otevřená encyklopedie'), 'LaTe
 assert.equal(plainTeX('{Zur Elektrodynamik bewegter K{\\"o}rper}. ({German}) [{On} the \\emph{bodies}]'),
   'Zur Elektrodynamik bewegter Körper. (German) [On the bodies]');
 console.log('OK: názvy pro přehled');
+
+// Dohledání adresy: odpovědi Wikimedia Citoid (zkráceno ze skutečných, 2026-11-23)
+const dnes = '2026-11-23';
+const wiki = fromCitoid({ itemType: 'encyclopediaArticle', title: 'Tíhové zrychlení', encyclopediaTitle: 'Wikipedie',
+  url: 'https://cs.wikipedia.org/w/index.php?title=T%C3%ADhov%C3%A9_zrychlen%C3%AD&oldid=1', date: '2026-08-04' },
+  'https://cs.wikipedia.org/wiki/T%C3%ADhov%C3%A9_zrychlen%C3%AD#Hodnoty', dnes);
+assert.deepEqual(wiki, { type: 'inreference', values: { title: 'Tíhové zrychlení',
+  booktitle: 'Wikipedie: Otevřená encyklopedie', url: 'https://cs.wikipedia.org/wiki/Tíhové_zrychlení',
+  urldate: dnes, year: '2026' } });
+assert.equal(buildEntry(wiki.type, wiki.values).problems.length, 0);
+const muni = fromCitoid({ itemType: 'webpage', title: 'Od roku 1919 vytváříme podmínky pro chytřejší svět',
+  websiteTitle: 'Masarykova univerzita | MUNI', url: 'https://www.muni.cz/o-univerzite', accessDate: dnes,
+  author: [['Masarykova', 'univerzita']] }, 'https://www.muni.cz/o-univerzite', dnes);
+assert.equal(muni.type, 'online');
+assert.deepEqual(muni.values.author, [{ last: 'Masarykova univerzita', first: '', inst: true }]);
+assert.equal(muni.values.organization, 'Masarykova univerzita');
+const rozhlas = fromCitoid({ itemType: 'webpage', title: 'Vesmír | Věda a technologie | iROZHLAS - spolehlivé zprávy',
+  websiteTitle: 'iROZHLAS', date: dnes }, 'https://www.irozhlas.cz/veda-technologie/vesmir', dnes);
+assert.equal(rozhlas.values.title, 'Vesmír');
+assert.equal(rozhlas.values.date, undefined, 'dnešní datum zveřejnění je nespolehlivé');
+const kniha = fromCitoid({ itemType: 'book', ISBN: ['978-0-262-03384-8', '978-0-262-53305-8'], title: 'Introduction to algorithms',
+  edition: '3rd ed', place: 'Cambridge, Mass', publisher: 'MIT Press', date: '2009', editor: [['Thomas H.', 'Cormen']] }, '');
+assert.deepEqual(kniha, { type: 'book', values: { editor: [{ last: 'Cormen', first: 'Thomas H.' }],
+  title: 'Introduction to algorithms', publisher: 'MIT Press', location: 'Cambridge, Mass', edition: '3',
+  isbn: '978-0-262-03384-8', year: '2009' } });
+console.log('OK: dohledání adresy (Citoid)');

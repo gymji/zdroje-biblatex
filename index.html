@@ -16,10 +16,10 @@
 
 <main>
   <section class="card" aria-labelledby="h-hledat">
-    <h2 id="h-hledat">1. Dohledat podle DOI nebo ISBN <span class="muted">(nepovinné)</span></h2>
+    <h2 id="h-hledat">1. Dohledat podle DOI, ISBN nebo adresy <span class="muted">(nepovinné)</span></h2>
     <form id="lookup" class="row">
-      <label class="grow">DOI článku nebo ISBN knihy
-        <input id="lookup-id" placeholder="např. 10.1088/1361-6552/aac05e nebo 978-80-214-4123-1" autocomplete="off">
+      <label class="grow">DOI článku, ISBN knihy nebo adresa webové stránky
+        <input id="lookup-id" placeholder="např. 10.1088/1361-6552/aac05e, 978-0-262-03384-8 nebo https://cs.wikipedia.org/wiki/Kyvadlo" autocomplete="off">
       </label>
       <button type="submit">Dohledat</button>
     </form>
@@ -94,7 +94,11 @@
 
 <footer>
   <p><a href="https://github.com/gymji/zdroje-biblatex">zdrojový kód</a>
-     · data DOI: Crossref, ISBN: Google Books / Open Library</p>
+     · data DOI: Crossref, ISBN: Google Books / Open Library, webové stránky: Wikimedia Citoid
+     (zadaná adresa se pošle Wikimedii)</p>
+  <p>© 2026 Gymnázium Jírovcova 8, České Budějovice ·
+     <a href="https://www.jirovcovka.net">www.jirovcovka.net</a> ·
+     <a href="https://github.com/gymji/zdroje-biblatex/blob/main/LICENSE">licence MIT</a></p>
 </footer>
 <script type="module" src="app.js"></script>
 </body>

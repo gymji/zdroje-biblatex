@@ -3,7 +3,7 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, parseBib, toForm, plainTeX } from './bib.js';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, parseBib, toForm, plainTeX } from './bib.js';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -280,8 +280,16 @@ $('upload-file').addEventListener('change', async e => {
     p.errors.join(' ');
 });
 
-// ---------- dohledání podle DOI / ISBN ----------
-const get = (url, ms = 8000) => fetch(url, { signal: AbortSignal.timeout(ms) });
+// ---------- dohledání podle DOI / ISBN / adresy ----------
+const get = (url, ms = 8000, headers = {}) => fetch(url, { headers, signal: AbortSignal.timeout(ms) });
+// Wikimedia Citoid: stáhne stránku a rozebere ji převodníky Zotera (stejně jako citace na Wikipedii)
+async function citoid(q) {
+  const res = await get('https://en.wikipedia.org/api/rest_v1/data/citation/mediawiki/' + encodeURIComponent(q), 15000,
+    { 'Api-User-Agent': 'zdroje-biblatex (https://github.com/gymji/zdroje-biblatex)' });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
 $('lookup').addEventListener('submit', async e => {
   e.preventDefault();
   const raw = $('lookup-id').value.trim();
@@ -289,20 +297,30 @@ $('lookup').addEventListener('submit', async e => {
   if (!raw) return;
   msg.textContent = 'Hledám…';
   try {
-    let r;
+    let r, web = false;
     const doi = raw.replace(/^https?:\/\/(dx\.)?doi\.org\//, '').replace(/^doi:\s*/i, '');
     if (/^10\.\d{4,}\//.test(doi)) {
       const res = await get('https://api.crossref.org/works/' + encodeURIComponent(doi));
       if (!res.ok) throw new Error('DOI v databázi Crossref nenalezeno.');
       r = fromCrossref((await res.json()).message);
+    } else if (/^(https?:\/\/|www\.)/i.test(raw)) {
+      const url = /^www\./i.test(raw) ? 'https://' + raw : raw;
+      msg.textContent = 'Hledám… (u webové stránky to může trvat i několik sekund)';
+      let plain = url;                  // Citoid pozná heslo Wikipedie jen s diakritikou, ne s %C3%AD
+      try { plain = decodeURI(url); } catch { /* ponechat */ }
+      const z = await citoid(plain);
+      if (!z) throw new Error('Ze stránky se nepodařilo zjistit údaje (nejde načíst, je za přihlášením, nebo to není jeden zdroj, ale např. výsledky hledání).');
+      r = fromCitoid(z, url, today());
+      web = true;
     } else {
       const isbn = raw.replace(/[^0-9Xx]/g, '');
-      if (![10, 13].includes(isbn.length)) throw new Error('Nevypadá to jako DOI (10.…/…) ani ISBN (10 nebo 13 číslic).');
+      if (![10, 13].includes(isbn.length)) throw new Error('Nevypadá to jako DOI (10.…/…), ISBN (10 nebo 13 číslic) ani adresa (https://…).');
       r = await lookupIsbn(isbn, raw);
     }
     current = { ...current, type: r.type, values: r.values };
     renderFields(); update();
-    msg.textContent = 'Nalezeno. Údaje zkontrolujte a doplňte chybějící (např. místo vydání).';
+    msg.textContent = web ? 'Nalezeno. U webové stránky údaje vždy zkontrolujte — hlavně druh zdroje, autora, název a datum.'
+                          : 'Nalezeno. Údaje zkontrolujte a doplňte chybějící (např. místo vydání).';
   } catch (err) {
     // vlastní hlášky jsou Error; jinak vypršel čas nebo selhalo spojení
     const text = err.name === 'TimeoutError' ? 'Služba neodpověděla včas.'
@@ -317,11 +335,14 @@ async function lookupIsbn(isbn, raw) {
     const data = await res.json();
     if (data.items && data.items.length) return fromGoogleBooks(data.items[0].volumeInfo, raw);
   } catch { /* zkusíme Open Library */ }
-  const res = await get(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-  const data = await res.json();
-  const b = data['ISBN:' + isbn];
-  if (!b) throw new Error('ISBN se nepodařilo dohledat (české knihy často chybí).');
-  return fromOpenLibrary(b, raw);
+  try {
+    const res = await get(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    const b = (await res.json())['ISBN:' + isbn];
+    if (b) return fromOpenLibrary(b, raw);
+  } catch { /* zkusíme Citoid */ }
+  const z = await citoid(isbn).catch(() => null);
+  if (z) return fromCitoid(z, '');
+  throw new Error('ISBN se nepodařilo dohledat (české knihy často chybí).');
 }
 
 // ---------- start ----------

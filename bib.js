@@ -285,6 +285,60 @@ export function fromOpenLibrary(b, isbn) {
     year: ((b.publish_date || '').match(/\d{4}/) || [''])[0], isbn } };
 }
 
+// --- Dohledání podle adresy (Wikimedia Citoid, formát „mediawiki“ = položka Zotera) ---
+// z = jedna položka odpovědi, url = adresa, kterou zadal student (u Wikipedie kratší než trvalý odkaz).
+const CITOID_TYPES = { encyclopediaArticle: 'inreference', dictionaryEntry: 'inreference', webpage: 'online',
+  blogPost: 'online', forumPost: 'online', newspaperArticle: 'article', magazineArticle: 'article',
+  journalArticle: 'article', book: 'book', bookSection: 'incollection', conferencePaper: 'inproceedings',
+  thesis: 'thesis', report: 'report', videoRecording: 'movie', film: 'movie', tvBroadcast: 'movie',
+  audioRecording: 'music', podcast: 'music', computerProgram: 'software', dataset: 'dataset',
+  patent: 'patent', statute: 'legal', interview: 'interview' };
+const WIKI = { Wikipedie: 'Wikipedie: Otevřená encyklopedie', Wikipedia: 'Wikipedia: The Free Encyclopedia' };
+export function fromCitoid(z, url, today = '') {
+  const first = s => (Array.isArray(s) ? s[0] : s) || '';
+  const site = (z.websiteTitle || '').split(' | ')[0].trim();
+  let type = CITOID_TYPES[z.itemType] || 'online';
+  if (type === 'article' && !z.publicationTitle) type = 'online';     // zpráva na webu bez názvu novin
+  // „Masarykova univerzita“ rozdělené na jméno a příjmení → instituce
+  const names = list => (list || []).map(([f = '', l = '']) => {
+    const full = `${f} ${l}`.trim();
+    return !l || (site && site.toLowerCase().includes(full.toLowerCase()))
+      ? { last: full, first: '', inst: true } : { last: l, first: f };
+  });
+  // „Vesmír | Věda a technologie | iROZHLAS – zprávy“ → „Vesmír“
+  let title = z.title || '';
+  const parts = title.split(' | ');
+  if (parts.length > 1 && site && parts[parts.length - 1].toLowerCase().includes(site.split(/\s+/)[0].toLowerCase()))
+    title = parts[0];
+  const date = /^\d{4}(-\d\d){0,2}$/.test(z.date || '') && z.date !== today ? z.date : '';   // dnešní = nespolehlivé
+  let link = url.trim();
+  if (WIKI[z.encyclopediaTitle]) {                // Wikipedie: čitelná adresa bez #oddílu
+    link = link.replace(/#.*$/, '');
+    try { link = decodeURI(link); } catch { /* ponechat */ }
+  }
+  const v = {
+    author: names(z.author || z.director || z.contributor),
+    editor: names(z.editor),
+    title,
+    journaltitle: z.publicationTitle || '',
+    booktitle: WIKI[z.encyclopediaTitle] || z.encyclopediaTitle || z.dictionaryTitle || z.bookTitle || z.proceedingsTitle || '',
+    organization: site,
+    publisher: z.publisher || z.university || z.institution || '',
+    institution: z.university || z.institution || '',
+    type: z.thesisType || z.reportType || '',
+    location: z.place || '',
+    edition: (String(z.edition || '').match(/\d+/) || [''])[0],
+    volume: z.volume || '', number: z.issue || z.reportNumber || z.patentNumber || '', pages: z.pages || '',
+    isbn: first(z.ISBN), issn: first(z.ISSN), doi: z.DOI || '',
+    url: link, urldate: today,
+  };
+  if (type === 'online' || type === 'patent' || type === 'interview') v.date = date;
+  else v.year = date.slice(0, 4) || (z.date || '').match(/\d{4}/)?.[0] || '';
+  if (type === 'thesis' && !/práce/i.test(v.type)) v.type = '';      // „Diplomová práce“ apod. vybere student
+  for (const k of Object.keys(v)) if (Array.isArray(v[k]) ? !v[k].length : !v[k]) delete v[k];
+  return { type, values: v };
+}
+
 // =========================================================
 // Nahrání vlastního .bib: text → záznamy → hodnoty pro formulář
 // =========================================================

@@ -9,7 +9,8 @@ seminární práci v LaTeXu (šablona maturitní práce, Overleaf).
 - 20 druhů zdrojů: kniha, kapitola, sborník, článek, časopis, web, encyklopedie,
   zpráva instituce, závěrečná práce, patent, video, hudba, nástroj AI, software,
   zákon, norma, datová sada, rozhovor, jiný zdroj
-- dohledání podle DOI (Crossref) a ISBN (Google Books, Open Library)
+- dohledání podle DOI (Crossref), ISBN (Google Books, Open Library, Citoid) a adresy
+  webové stránky (Wikimedia Citoid — např. Wikipedie, weby univerzit, repozitáře prací)
 - kontrola povinných údajů, klíč pro `\cite`, „Moje zdroje“ a stažení celého `.bib`
 - nahrání vlastního `.bib`: přehled se stavem každého záznamu, úprava ve formuláři
   (klíč i další pole jako `abstract` zůstanou), neupravené záznamy se stáhnou beze změny
@@ -38,3 +39,8 @@ test/preklad.sh             # + překlad test-numeric.pdf a test-authoryear.pdf
 Typy bez vlastního ovladače v `biblatex-iso690` (nástroj AI, software, zákon,
 norma, datová sada, rozhovor) se zapisují jako `@misc` s polem `howpublished`
 (v PDF v hranatých závorkách, např. `[online; AI chatbot]`).
+
+## Licence
+
+© 2026 Gymnázium Jírovcova 8, České Budějovice (https://www.jirovcovka.net),
+licence [MIT](LICENSE) — volné použití, úpravy i šíření se zachováním údaje o autorovi.
