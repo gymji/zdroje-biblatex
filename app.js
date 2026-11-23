@@ -3,8 +3,8 @@
 // Logika záznamu je v bib.js.
 // =========================================================
 import { TYPES, FIELDS, typeById, fieldLabel, buildEntry,
-         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123k';
-import { PRIKLADY } from './priklady.js?v=20261123k';
+         fromCrossref, fromGoogleBooks, fromOpenLibrary, fromCitoid, fromCPK, parseBib, decodeBib, toForm, plainTeX } from './bib.js?v=20261123l';
+import { PRIKLADY } from './priklady.js?v=20261123l';
 
 const $ = id => document.getElementById(id);
 const STORE = 'zdroje-biblatex:moje';
@@ -20,6 +20,11 @@ let mine = load(STORE), head = load(HEAD);
 // key = vlastní klíč a extra = další pole jen u zdroje z nahraného .bib
 let current = { type: 'book', values: {} };
 let editIndex = null;                   // který z mých zdrojů se právě upravuje
+// krátké názvy druhů pro sloupec Druh v Mých zdrojích (celý název je v title)
+const DRUH = { book: 'Kniha', inbook: 'Kapitola', incollection: 'Ve sborníku', inproceedings: 'Konference',
+  article: 'Článek', periodical: 'Časopis', online: 'Web', inreference: 'Heslo', report: 'Zpráva',
+  thesis: 'Závěrečná práce', patent: 'Patent', movie: 'Video, film', music: 'Hudba, zvuk', ai: 'Nástroj AI',
+  software: 'Software', legal: 'Předpis', standard: 'Norma', dataset: 'Data', interview: 'Rozhovor', misc: 'Jiný' };
 const plural = (n, a, b, c) => `${n} ${n === 1 ? a : n >= 2 && n <= 4 ? b : c}`;
 
 // ---------- výběr druhu zdroje ----------
@@ -212,14 +217,15 @@ function renderMine() {
     stav.firstChild.className = 'stav ' + (err ? 'err' : warn ? 'warn' : 'ok');
     stav.title = r.problems.map(p => p.msg).join('\n');
     const akce = cell('c-akce');
+    const druh = cell('c-druh', DRUH[m.type] || typeById(m.type).label);
+    druh.title = typeById(m.type).label;
     tr.append(
       cell('c-n', `${i + 1}.`),
       cell('c-klic', m.key, 'code'),
       cell('c-autor', authors.length ? plainTeX(authors[0].last) + (authors.length > 1 ? ' a kol.' : '') : ''),
       cell('c-rok', v.year || (v.date || '').slice(0, 4)),
       cell('c-nazev', plainTeX(v.title || '')),
-      cell('c-druh', typeById(m.type).label.split(/ \(|,/)[0]),
-      stav, akce);
+      druh, stav, akce);
     akce.append(
       button('upravit', 'secondary small', () => {
         current = { type: m.type, values: structuredClone(m.values), key: m.own ? m.key : undefined, extra: m.extra };

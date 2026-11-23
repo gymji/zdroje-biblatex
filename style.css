@@ -165,6 +165,7 @@ pre {
 #problems .info { background: var(--code); color: var(--muted); border-left-color: var(--line-strong); }
 .hint.ai { background: var(--ai-bg); color: var(--text); padding: 10px 12px; border-radius: 10px; }
 .msg { min-height: 1.5em; margin: 8px 0 0; color: var(--muted); }
+#lookup-msg:empty { display: none; }   /* pod polem Dohledat jen s hláškou */
 .msg:not(:empty) { color: var(--accent); font-weight: 600; }
 
 /* ---------- Moje zdroje: pevné sloupce, dlouhý text se zkrátí „…“ (celý v title) ---------- */
